@@ -704,3 +704,94 @@ footer {
   }
 
 }
+
+/* =====================================
+   تحسين الوضع الفاتح
+===================================== */
+
+body:not(.dark-mode) {
+  --background: #F7FAF8;
+  --surface: #FFFFFF;
+  --surface-soft: #F0F5F1;
+  --surface-card: #FFFFFF;
+
+  --primary: #287A4B;
+  --primary-dark: #205F3C;
+  --primary-soft: #E7F2EA;
+
+  --text: #263B2E;
+  --text-muted: #718076;
+
+  --border: #E3EBE5;
+  --shadow: 0 8px 25px rgba(35, 75, 47, 0.06);
+
+  --header: #FFFFFF;
+  --footer: #F0F5F1;
+}
+
+/* خلفية الشاشة الرئيسية */
+
+body:not(.dark-mode) #home {
+  background: #FFFFFF;
+  border-color: #E3EBE5;
+}
+
+/* بطاقات الاختيار */
+
+body:not(.dark-mode) .choice-card {
+  background: #FFFFFF;
+  border-color: #E1EAE3;
+  color: #263B2E;
+}
+
+body:not(.dark-mode) .choice-card:hover {
+  background: #F0F6F1;
+  border-color: #8AB99A;
+}
+
+body:not(.dark-mode) .choice-card.selected-choice {
+  background: #287A4B;
+  color: #FFFFFF;
+  border-color: #287A4B;
+}
+
+/* =====================================
+   تثبيت أيقونة الوضع أعلى اليسار
+===================================== */
+
+.header-content {
+  position: relative;
+  justify-content: flex-start;
+}
+
+.theme-toggle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-50%) rotate(12deg);
+}
+
+.theme-toggle:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+/* الحفاظ على مكان الزر في الوضع الداكن */
+
+body.dark-mode .theme-toggle {
+  background: #405A49;
+  border-color: #526B5A;
+}
