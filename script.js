@@ -78,7 +78,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   function getGradeData() {
     const stage = getStageData();
-
     return stage?.grades?.[selected.grade];
   }
 
@@ -181,68 +180,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   }
 
+  // إنشاء رابط مستقل لصفحة كل كتاب
   function createBookPageURL(book) {
     if (!book.id) return "";
 
-    const url = new URL(window.location.href);
-
-    url.search = "";
-    url.hash = "";
-    url.searchParams.set("book", book.id);
+    const url = new URL("book.html", window.location.href);
+    url.searchParams.set("id", book.id);
 
     return url.href;
   }
 
-  function createShareButtons(book) {
-    if (!book.id) return "";
-
-    return `
-      <div class="book-share" style="
-        margin-top:16px;
-        padding:14px;
-        border:1px solid #E3EAE5;
-        border-radius:12px;
-        text-align:center;
-      ">
-        <h4>مشاركة الكتاب</h4>
-
-        <div style="
-          display:flex;
-          flex-wrap:wrap;
-          gap:8px;
-          justify-content:center;
-        ">
-          <button class="primary-button"
-            data-share-action="whatsapp"
-            data-book-id="${escapeHTML(book.id)}">
-            واتساب
-          </button>
-
-          <button class="primary-button"
-            data-share-action="facebook"
-            data-book-id="${escapeHTML(book.id)}">
-            فيسبوك
-          </button>
-
-          <button class="primary-button"
-            data-share-action="telegram"
-            data-book-id="${escapeHTML(book.id)}">
-            تليجرام
-          </button>
-
-          <button class="primary-button"
-            data-share-action="copy"
-            data-book-id="${escapeHTML(book.id)}">
-            نسخ الرابط
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
+  // بطاقة الكتاب في الصفحة الرئيسية
   function createBookCard(book) {
     const coverURL = safeURL(book.cover);
-    const bookURL = safeURL(book.url);
+    const pageURL = createBookPageURL(book);
 
     return `
       <div class="card book-card">
@@ -259,136 +210,47 @@ document.addEventListener("DOMContentLoaded", async function () {
                   max-height:230px;
                   object-fit:contain;
                   border-radius:10px;
+                  margin-bottom:14px;
                 "
               >
             `
-            : ""
+            : `
+              <div style="
+                width:100%;
+                min-height:130px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                background:var(--surface-soft, #edf5ef);
+                border-radius:10px;
+                margin-bottom:14px;
+                color:var(--text, #245b3d);
+              ">
+                <span style="font-size:42px;">📚</span>
+              </div>
+            `
         }
 
         <h3>${escapeHTML(book.title)}</h3>
 
-        ${
-          bookURL
-            ? `
-              <a
-                class="primary-button"
-                href="${escapeHTML(bookURL)}"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                فتح الكتاب
-              </a>
-            `
-            : "<p>رابط الكتاب غير متاح حاليًا.</p>"
-        }
+        <a
+          class="primary-button"
+          href="${escapeHTML(pageURL)}"
+          style="
+            display:block;
+            text-align:center;
+            text-decoration:none;
+            margin-top:14px;
+          "
+        >
+          فتح صفحة الكتاب
+        </a>
 
-        ${createShareButtons(book)}
-
-        <div class="book-details" style="
-          margin-top:18px;
-          padding:18px;
-          border:1px solid #E3EAE5;
-          border-radius:14px;
-          text-align:right;
-        ">
-          <h3>تفاصيل الكتاب</h3>
-
-          <p><strong>المادة:</strong> ${escapeHTML(book.subject)}</p>
-          <p><strong>المرحلة:</strong> ${escapeHTML(curriculum[book.stage]?.name || book.stage)}</p>
-          <p><strong>الصف:</strong> ${escapeHTML(getGradeName(book.stage, book.grade))}</p>
-          <p><strong>الشعبة أو المسار:</strong> ${escapeHTML(book.option || "غير محدد")}</p>
-          <p><strong>الفصل الدراسي:</strong> ${escapeHTML(getTermName(book.term))}</p>
-          <p><strong>السنة الدراسية:</strong> ${escapeHTML(book.academic_year || "غير محددة")}</p>
-          <p><strong>حجم الكتاب:</strong> ${escapeHTML(book.file_size || "غير محدد")}</p>
-
-          <hr style="margin:12px 0;border:0;border-top:1px solid #E3EAE5;">
-
-          <h4>نبذة عن الكتاب</h4>
-          <p>${escapeHTML(book.description || "لا توجد نبذة مضافة لهذا الكتاب.")}</p>
-        </div>
       </div>
     `;
   }
 
-  async function shareBook(action, bookId) {
-    const book = bookDatabase.find(item =>
-      String(item.id) === String(bookId)
-    );
-
-    if (!book) {
-      alert("تعذر العثور على الكتاب.");
-      return;
-    }
-
-    const shareURL = createBookPageURL(book);
-
-    if (!shareURL) {
-      alert("تعذر إنشاء رابط المشاركة.");
-      return;
-    }
-
-    const shareText = `كتاب ${book.title} من مكتبة حبر وعقل`;
-
-    let targetURL = "";
-
-    if (action === "whatsapp") {
-      targetURL = "https://wa.me/?text=" +
-        encodeURIComponent(shareText + "\n" + shareURL);
-    }
-
-    if (action === "facebook") {
-      targetURL = "https://www.facebook.com/sharer/sharer.php?u=" +
-        encodeURIComponent(shareURL);
-    }
-
-    if (action === "telegram") {
-      targetURL = "https://t.me/share/url?url=" +
-        encodeURIComponent(shareURL) +
-        "&text=" + encodeURIComponent(shareText);
-    }
-
-    if (action === "copy") {
-      try {
-        await navigator.clipboard.writeText(shareURL);
-        alert("تم نسخ رابط صفحة الكتاب بنجاح.");
-      } catch {
-        const textArea = document.createElement("textarea");
-        textArea.value = shareURL;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-
-        document.body.appendChild(textArea);
-        textArea.select();
-
-        const copied = document.execCommand("copy");
-        textArea.remove();
-
-        if (copied) {
-          alert("تم نسخ رابط صفحة الكتاب بنجاح.");
-        } else {
-          window.prompt("انسخ رابط الكتاب:", shareURL);
-        }
-      }
-
-      return;
-    }
-
-    if (targetURL) {
-      window.open(targetURL, "_blank", "noopener,noreferrer");
-    }
-  }
-
-  document.addEventListener("click", function (event) {
-    const button = event.target.closest("[data-share-action]");
-
-    if (!button) return;
-
-    shareBook(
-      button.dataset.shareAction,
-      button.dataset.bookId
-    );
-  });
-
+  // فلترة الكتب حسب الاختيارات
   function getMatchingBooks() {
     return bookDatabase.filter(book =>
       book.stage === selected.stage &&
@@ -399,6 +261,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     );
   }
 
+  // عرض الكتب
   function showBooks() {
     const matchingBooks = getMatchingBooks();
 
@@ -433,6 +296,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
+  // عرض خطوة الاختيار الحالية
   function renderStep() {
     const step = steps[currentStep];
 
@@ -532,6 +396,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
   }
 
+  // تنفيذ الاختيار والانتقال للخطوة المناسبة
   function selectOption(key, value) {
     selected[key] = value;
 
@@ -597,11 +462,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     backButton.addEventListener("click", goBack);
   }
 
+  // البحث داخل الكتب المطابقة للاختيارات
   function showSearchResults(value) {
     if (!searchResults) return;
 
     const query = value.trim().toLowerCase();
-
     const matchingBooks = getMatchingBooks();
 
     const results = query
@@ -627,61 +492,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   }
 
-  function showSharedBook() {
-    const params = new URLSearchParams(window.location.search);
-    const sharedBookId = params.get("book");
-
-    if (!sharedBookId) return;
-
-    const book = bookDatabase.find(item =>
-      String(item.id) === String(sharedBookId)
-    );
-
-    const section = document.createElement("section");
-    section.className = "main-section container dynamic-section";
-
-    if (!book) {
-      section.innerHTML = `
-        <div class="card">
-          <h2>الكتاب غير موجود</h2>
-          <p>ربما تم حذف الكتاب أو أن الرابط غير صحيح.</p>
-          <a class="primary-button" href="${escapeHTML(
-            window.location.origin + window.location.pathname
-          )}">
-            العودة إلى المكتبة
-          </a>
-        </div>
-      `;
-    } else {
-      section.innerHTML = `
-        <h2 class="section-title">صفحة الكتاب</h2>
-        <p class="section-description">مكتبة حبر وعقل التعليمية</p>
-
-        ${createBookCard(book)}
-
-        <button
-          class="primary-button"
-          type="button"
-          id="return-to-library"
-          style="margin-top:16px;"
-        >
-          العودة إلى المكتبة
-        </button>
-      `;
-
-      section.querySelector("#return-to-library")
-        .addEventListener("click", function () {
-          window.location.href =
-            window.location.origin + window.location.pathname;
-        });
-    }
-
-    library.before(section);
-    library.style.display = "none";
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
+  // تحميل الكتب من قاعدة البيانات
   async function loadBooks() {
     if (!window.supabaseClient) {
       wizardContent.innerHTML = `
@@ -732,8 +543,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         `تم تحميل ${bookDatabase.length} كتاب من Supabase.`
       );
 
-      showSharedBook();
-
     } catch (error) {
       console.error("حدث خطأ أثناء تحميل الكتب:", error);
 
@@ -761,4 +570,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderStep();
 
   await loadBooks();
+
+  // إعادة عرض الكتب إذا كانت خطوة الكتب مفتوحة بالفعل
+  if (steps[currentStep]?.key === "books") {
+    showBooks();
+  }
 });
