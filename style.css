@@ -1,24 +1,20 @@
 
-/* =================================
-   حبر وعقل - التصميم الرئيسي
-================================= */
-
 :root {
-  --green: #248b52;
-  --green-dark: #176b3d;
-  --green-light: #e9f5ed;
-  --background: #f5f8f6;
-  --white: #ffffff;
-  --text: #20352a;
-  --muted: #718078;
-  --border: #e3ebe5;
-  --shadow: 0 5px 22px rgba(28, 70, 45, 0.07);
+  --primary: #248B52;
+  --primary-dark: #176B3D;
+  --primary-light: #E8F5EC;
+  --background: #F5F8F6;
+  --surface: #FFFFFF;
+  --text: #1D2B22;
+  --text-muted: #6B756E;
+  --border: #E3EAE5;
+  --shadow: 0 8px 25px rgba(20, 70, 40, 0.07);
 }
 
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 html {
@@ -26,492 +22,399 @@ html {
 }
 
 body {
+  font-family: Tahoma, Arial, sans-serif;
   direction: rtl;
   background: var(--background);
   color: var(--text);
-  font-family: Tahoma, Arial, sans-serif;
   line-height: 1.8;
   overflow-x: hidden;
 }
 
-button,
-input {
-  font: inherit;
-}
-
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
-}
-
 a {
   text-decoration: none;
+  color: inherit;
+}
+
+button, input {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .container {
   width: min(1100px, 92%);
-  margin: auto;
+  margin-inline: auto;
 }
 
-/* =================================
-   رأس الموقع
-================================= */
+/* الشريط العلوي */
 
-.site-header {
-  background: var(--white);
+header {
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  position: relative;
-  z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.site-header .container {
-  min-height: 82px;
+.header-content {
+  min-height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  flex-wrap: wrap;
-  padding-top: 12px;
-  padding-bottom: 12px;
 }
 
-.logo h1 {
-  color: var(--green);
-  font-size: 29px;
-  line-height: 1.4;
+.logo {
+  color: var(--primary);
+  font-size: 28px;
   font-weight: 800;
 }
 
-.logo p {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.main-nav {
+.nav-links {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.main-nav a {
-  color: var(--text);
-  padding: 8px 13px;
-  border-radius: 9px;
-  font-size: 14px;
+.nav-links a {
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 10px;
   transition: 0.2s;
 }
 
-.main-nav a:hover {
-  background: var(--green-light);
-  color: var(--green-dark);
+.nav-links a:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
 }
 
-/* =================================
-   الواجهة الرئيسية
-================================= */
+/* الأقسام العامة */
 
-.hero {
-  background: linear-gradient(135deg, #e8f5ec, #f8fbf9);
-  padding: 65px 0;
+.main-section {
+  padding: 45px 0;
+}
+
+.section-title {
+  font-size: 27px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.section-description {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* الواجهة الرئيسية */
+
+#home {
+  background: linear-gradient(135deg, #E5F4E9, #F7FBF8);
+  border: 1px solid #DCEDE1;
+  border-radius: 24px;
+  margin-top: 28px;
+  padding: 65px 30px;
   text-align: center;
 }
 
-.hero h2 {
-  font-size: clamp(25px, 5vw, 38px);
-  color: var(--green-dark);
-  margin-bottom: 12px;
+#home .section-title {
+  font-size: clamp(27px, 5vw, 38px);
+  color: var(--primary-dark);
 }
 
-.hero p {
-  color: #53665a;
-  font-size: 16px;
-  margin-bottom: 25px;
+#home .section-title span {
+  color: var(--primary);
 }
 
-.main-button,
+/* الأزرار */
+
 .primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--green);
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 12px;
   padding: 11px 22px;
   font-weight: bold;
-  cursor: pointer;
   transition: 0.2s;
 }
 
-.main-button:hover,
 .primary-button:hover {
-  background: var(--green-dark);
+  background: var(--primary-dark);
   transform: translateY(-2px);
 }
 
-/* =================================
-   البحث
-================================= */
+/* البحث */
 
-.search-section {
-  padding: 35px 0 20px;
-}
-
-.search-section h2,
-.library-section h2,
-.latest-section h2 {
-  font-size: 24px;
-  margin-bottom: 12px;
-  color: var(--text);
+#search-section {
+  padding-top: 35px;
 }
 
 #book-search {
   width: 100%;
-  height: 58px;
-  background: var(--white);
+  min-height: 58px;
+  padding: 14px 18px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 0 20px;
-  outline: none;
+  border-radius: 15px;
+  background: var(--surface);
   font-size: 16px;
-  color: var(--text);
+  outline: none;
   box-shadow: var(--shadow);
 }
 
 #book-search:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(36, 139, 82, 0.10);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(36, 139, 82, 0.1);
 }
 
-/* =================================
-   المكتبة والمراحل
-================================= */
+/* بطاقات المراحل والصفوف */
 
-.library-section {
-  padding: 25px 0 45px;
-}
-
-.library-section > .container > p {
-  color: var(--muted);
-  margin-bottom: 20px;
-}
-
-.stages-container {
+.stages-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 13px;
-  margin-top: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
-.stage-button {
-  min-height: 85px;
-  padding: 15px 10px;
-  background: var(--white);
+.card {
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 15px;
-  color: var(--text);
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
+  border-radius: 18px;
+  padding: 23px;
   box-shadow: var(--shadow);
   transition: 0.2s;
 }
 
-.stage-button:hover {
-  background: var(--green);
-  color: white;
-  border-color: var(--green);
-  transform: translateY(-3px);
-}
-
-/* =================================
-   الأقسام الديناميكية
-================================= */
-
-.dynamic-section,
-.main-section {
-  width: min(1100px, 92%);
-  margin: 25px auto;
-  padding: 25px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
-}
-
-.section-title {
-  font-size: 25px;
-  color: var(--green-dark);
-  margin: 15px 0 5px;
-}
-
-.section-description {
-  color: var(--muted);
-  margin-bottom: 20px;
-  font-size: 15px;
-}
-
-.stages-grid,
-.books-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 15px;
-  margin-top: 20px;
-}
-
-/* =================================
-   البطاقات
-================================= */
-
-.card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 3px 12px rgba(28, 70, 45, 0.04);
+.card:hover {
+  border-color: #B9DCC7;
 }
 
 .stage-card {
-  text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  min-height: 130px;
+  gap: 12px;
+  min-height: 175px;
 }
 
 .stage-card h3 {
-  font-size: 17px;
+  font-size: 20px;
+  color: var(--primary-dark);
+}
+
+.stage-card p {
+  color: var(--text-muted);
 }
 
 .stage-card .primary-button {
   width: 100%;
 }
 
-/* =================================
-   زر الرجوع
-================================= */
+/* الأقسام الديناميكية */
 
-.back-button {
-  width: auto;
-  min-width: 95px;
-  padding: 8px 20px;
-  border-radius: 10px;
-  font-size: 14px;
+.dynamic-section {
+  animation: sectionAppear 0.3s ease;
 }
 
-/* =================================
-   بطاقات الكتب
-================================= */
+.dynamic-section .section-title {
+  color: var(--primary-dark);
+}
+
+.dynamic-section .section-description {
+  color: var(--text-muted);
+}
+
+.dynamic-section .stages-grid {
+  margin-top: 20px;
+}
+
+.dynamic-section .card {
+  min-height: 130px;
+}
+
+.dynamic-section .card .primary-button {
+  width: 100%;
+}
+
+.back-button {
+  width: auto !important;
+  min-width: 95px;
+  padding: 9px 20px;
+  margin-bottom: 12px;
+}
+
+/* الكتب */
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
 
 .book-card {
   text-align: center;
   overflow: hidden;
 }
 
-.book-card > img {
-  width: 100%;
-  height: 220px;
-  object-fit: contain;
-  background: #f7faf8;
+.book-card img {
+  max-width: 100%;
   border-radius: 12px;
-  margin-bottom: 15px;
 }
 
 .book-card h3 {
-  font-size: 19px;
+  color: var(--primary-dark);
   margin-bottom: 15px;
 }
 
-.book-card > a {
+.book-card .primary-button {
   width: 100%;
 }
 
+/* تفاصيل الكتاب */
+
 .book-details {
-  background: #f8faf8;
-  border-color: var(--border) !important;
-  line-height: 2;
+  background: #F8FAF8;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  text-align: right;
+  margin-top: 18px;
+  overflow-wrap: anywhere;
 }
 
 .book-details h3,
 .book-details h4 {
-  color: var(--green-dark);
+  color: var(--primary-dark);
   margin-bottom: 8px;
 }
 
 .book-details p {
-  color: #53665a;
-  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  margin-bottom: 5px;
 }
 
-/* =================================
-   أحدث الكتب
-================================= */
+/* أحدث الكتب */
 
-.latest-section {
-  padding: 35px 0 55px;
+#latest {
+  background: transparent;
 }
 
-#latest-books-container {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
+/* التذييل */
 
-/* =================================
-   التذييل
-================================= */
-
-.site-footer {
-  background: #172c20;
-  color: #eaf5ed;
-  padding: 25px 0;
+footer {
   text-align: center;
-  font-size: 13px;
+  padding: 25px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  margin-top: 30px;
 }
 
-.site-footer p + p {
-  color: #b9cbbf;
-  margin-top: 5px;
+/* الحركة */
+
+@keyframes sectionAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* =================================
-   شاشات التابلت
-================================= */
+/* التابلت */
 
 @media (max-width: 850px) {
-  .stages-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stages-grid,
-  .books-grid,
-  #latest-books-container {
+  .books-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* =================================
-   شاشات الموبايل
-================================= */
+/* الموبايل */
 
 @media (max-width: 600px) {
-  .container {
-    width: 92%;
-  }
-
-  .site-header .container {
-    justify-content: center;
-    text-align: center;
+  .header-content {
+    flex-direction: column;
+    padding: 12px 0;
     gap: 8px;
   }
 
-  .logo h1 {
-    font-size: 26px;
+  .logo {
+    font-size: 25px;
   }
 
-  .main-nav {
+  .nav-links {
     width: 100%;
     justify-content: center;
     gap: 5px;
   }
 
-  .main-nav a {
-    font-size: 12px;
-    padding: 7px 9px;
-  }
-
-  .hero {
-    padding: 38px 0;
-  }
-
-  .hero h2 {
-    font-size: 25px;
-  }
-
-  .hero p {
-    font-size: 14px;
-  }
-
-  .search-section {
-    padding-top: 25px;
-  }
-
-  .search-section h2,
-  .library-section h2,
-  .latest-section h2 {
-    font-size: 21px;
-  }
-
-  #book-search {
-    height: 54px;
-    font-size: 14px;
-  }
-
-  .stages-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .stage-button {
-    min-height: 75px;
+  .nav-links a {
     font-size: 13px;
-    padding: 10px 6px;
+    padding: 7px 10px;
   }
 
-  .dynamic-section,
+  #home {
+    padding: 40px 18px;
+    margin-top: 18px;
+    border-radius: 18px;
+  }
+
+  #home .section-title {
+    font-size: 27px;
+  }
+
   .main-section {
-    padding: 17px;
-    border-radius: 16px;
+    padding: 30px 0;
   }
 
   .section-title {
-    font-size: 21px;
-  }
-
-  .section-description {
-    font-size: 14px;
+    font-size: 22px;
   }
 
   .stages-grid,
-  .books-grid,
-  #latest-books-container {
+  .books-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 13px;
   }
 
   .stage-card {
-    min-height: 105px;
+    min-height: 145px;
+    padding: 19px;
   }
 
-  .book-card {
-    padding: 16px;
+  .dynamic-section {
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 17px;
+    box-shadow: var(--shadow);
+    margin-top: 20px;
+    margin-bottom: 20px;
   }
 
-  .book-card > img {
-    height: 210px;
+  .dynamic-section .card {
+    min-height: 115px;
+    padding: 17px;
   }
 
   .back-button {
-    width: auto;
-    min-width: 90px;
+    min-width: 85px;
   }
 
-  .site-footer {
-    padding: 20px 0;
+  .book-details {
+    padding: 15px;
   }
 }
 
-/* =================================
-   تقليل الحركة لمن يفضل ذلك
-================================= */
-
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
+    animation: none !important;
     transition: none !important;
   }
 }
