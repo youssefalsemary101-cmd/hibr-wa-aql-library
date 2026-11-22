@@ -4,10 +4,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#248B52">
+  <meta name="theme-color" content="#F5F9F6">
   <title>حبر وعقل | المكتبة التعليمية</title>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
+
+  <script>
+    try {
+      if (localStorage.getItem("hibr-theme") === "dark") {
+        document.documentElement.classList.add("dark-mode");
+      }
+    } catch (error) {}
+  </script>
 </head>
+
 <body>
 
   <header>
@@ -19,8 +28,10 @@
         type="button"
         id="theme-toggle"
         class="theme-toggle"
+        aria-label="تغيير الوضع"
+        title="تغيير الوضع"
       >
-        🌙 الوضع الداكن
+        🌙
       </button>
 
     </div>
@@ -32,6 +43,8 @@
     <section id="home" class="container main-section">
 
       <div class="home-content">
+
+        <div class="home-icon">📚</div>
 
         <h1 class="section-title">
           أهلاً بك في <span>حبر وعقل</span>
@@ -55,11 +68,7 @@
     </section>
 
     <!-- المكتبة التعليمية -->
-    <section
-      class="main-section container"
-      id="library"
-      hidden
-    >
+    <section class="main-section container" id="library" hidden>
 
       <div id="wizard">
 
@@ -75,9 +84,7 @@
 
         <div id="wizard-content">
 
-          <h1 class="section-title">
-            اختر المرحلة الدراسية
-          </h1>
+          <h1 class="section-title">اختر المرحلة الدراسية</h1>
 
           <p class="section-description">
             حدد المرحلة التعليمية للبدء.
@@ -109,12 +116,10 @@
 
       </div>
 
-      <!-- البحث -->
+      <!-- البحث عن الكتب -->
       <div id="book-search-area" hidden>
 
-        <h2 class="section-title">
-          ابحث عن كتاب
-        </h2>
+        <h2 class="section-title">ابحث عن كتاب</h2>
 
         <input
           type="search"
@@ -122,10 +127,7 @@
           placeholder="ابحث باسم الكتاب أو المادة..."
         >
 
-        <div
-          id="search-results"
-          class="books-grid"
-        ></div>
+        <div id="search-results" class="books-grid"></div>
 
       </div>
 
@@ -150,7 +152,7 @@
 
   <script src="script.js?v=4"></script>
 
-  <!-- إظهار المكتبة عند الضغط على تصفح الكتب -->
+  <!-- الشاشة الرئيسية -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -158,56 +160,88 @@
       const home = document.getElementById("home");
       const library = document.getElementById("library");
 
-      browseButton.addEventListener("click", function (event) {
+      if (browseButton && home && library) {
 
-        event.preventDefault();
+        browseButton.addEventListener("click", function (event) {
 
-        home.hidden = true;
-        library.hidden = false;
+          event.preventDefault();
 
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
+          home.hidden = true;
+          library.hidden = false;
+
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+          });
+
         });
+
+      }
+
+    });
+  </script>
+
+  <!-- الوضع الفاتح والداكن -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const themeButton = document.getElementById("theme-toggle");
+
+      if (!themeButton) return;
+
+      function applyTheme(theme) {
+
+        document.documentElement.classList.toggle(
+          "dark-mode",
+          theme === "dark"
+        );
+
+        document.body.classList.toggle(
+          "dark-mode",
+          theme === "dark"
+        );
+
+        themeButton.textContent =
+          theme === "dark" ? "☀️" : "🌙";
+
+        themeButton.setAttribute(
+          "aria-label",
+          theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"
+        );
+
+        document.querySelector('meta[name="theme-color"]')
+          ?.setAttribute(
+            "content",
+            theme === "dark" ? "#101A16" : "#F5F9F6"
+          );
+
+      }
+
+      let savedTheme = "light";
+
+      try {
+        savedTheme = localStorage.getItem("hibr-theme") || "light";
+      } catch (error) {}
+
+      applyTheme(savedTheme);
+
+      themeButton.addEventListener("click", function () {
+
+        const nextTheme =
+          document.documentElement.classList.contains("dark-mode")
+            ? "light"
+            : "dark";
+
+        try {
+          localStorage.setItem("hibr-theme", nextTheme);
+        } catch (error) {}
+
+        applyTheme(nextTheme);
 
       });
 
     });
   </script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-
-    const themeButton = document.getElementById("theme-toggle");
-
-    function applyTheme(theme) {
-      if (theme === "dark") {
-        document.body.classList.add("dark-mode");
-        themeButton.textContent = "☀️ الوضع الفاتح";
-      } else {
-        document.body.classList.remove("dark-mode");
-        themeButton.textContent = "🌙 الوضع الداكن";
-      }
-    }
-
-    const savedTheme = localStorage.getItem("hibr-theme") || "light";
-
-    applyTheme(savedTheme);
-
-    themeButton.addEventListener("click", function () {
-
-      const isDark = document.body.classList.contains("dark-mode");
-
-      const newTheme = isDark ? "light" : "dark";
-
-      localStorage.setItem("hibr-theme", newTheme);
-
-      applyTheme(newTheme);
-
-    });
-
-  });
-</script>
 
 </body>
 </html>
