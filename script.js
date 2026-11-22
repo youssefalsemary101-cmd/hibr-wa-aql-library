@@ -1,9 +1,10 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  const stageButtons = document.querySelectorAll("[data-stage]");
+  const library = document.getElementById("library");
+  const latestBooks = document.getElementById("latest-books");
 
-  const stagesData = {
+  const stages = {
     primary: {
       name: "المرحلة الابتدائية",
       grades: [
@@ -15,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "الصف السادس الابتدائي"
       ]
     },
-
     preparatory: {
       name: "المرحلة الإعدادية",
       grades: [
@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "الصف الثالث الإعدادي"
       ]
     },
-
     secondary: {
       name: "الثانوية العامة",
       grades: [
@@ -33,7 +32,6 @@ document.addEventListener("DOMContentLoaded", function () {
         "الصف الثالث الثانوي"
       ]
     },
-
     baccalaureate: {
       name: "البكالوريا",
       grades: [
@@ -44,59 +42,152 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
-  stageButtons.forEach(function (button) {
+  // المواد المبدئية - سيتم تخصيصها حسب الصف والمنهج
+  const subjects = [
+    "اللغة العربية",
+    "اللغة الإنجليزية",
+    "الرياضيات",
+    "العلوم",
+    "الدراسات الاجتماعية"
+  ];
 
-    button.addEventListener("click", function () {
+  function clearDynamicSections() {
+    document.querySelectorAll(".dynamic-section").forEach(section => {
+      section.remove();
+    });
+  }
 
-      const stageKey = button.dataset.stage;
-      const stage = stagesData[stageKey];
+  function createSection(title, description, content) {
+    const section = document.createElement("section");
+    section.className = "main-section container dynamic-section";
 
-      if (!stage) return;
+    section.innerHTML = `
+      <h2 class="section-title">${title}</h2>
+      <p class="section-description">${description}</p>
+      <div class="stages-grid">${content}</div>
+    `;
 
-      let gradesHTML = "";
+    return section;
+  }
 
-      stage.grades.forEach(function (grade, index) {
+  // عرض الصفوف
+  function showGrades(stageKey) {
+    const stage = stages[stageKey];
+    if (!stage) return;
 
-        gradesHTML += `
-          <div class="card grade-card">
-            <h3>${grade}</h3>
-            <button class="primary-button grade-button"
-              data-stage-key="${stageKey}"
-              data-grade-index="${index}">
-              عرض المواد
-            </button>
-          </div>
-        `;
+    clearDynamicSections();
 
+    const gradesHTML = stage.grades.map((grade, index) => `
+      <div class="card stage-card">
+        <h3>${grade}</h3>
+        <button class="primary-button" data-grade="${index}">
+          عرض المواد
+        </button>
+      </div>
+    `).join("");
+
+    const section = createSection(
+      stage.name,
+      "اختر الصف الدراسي للوصول إلى المواد.",
+      gradesHTML
+    );
+
+    library.after(section);
+
+    section.querySelectorAll("[data-grade]").forEach(button => {
+      button.addEventListener("click", function () {
+        showSubjects(stageKey, Number(button.dataset.grade));
       });
-
-      let oldSection = document.getElementById("grades-section");
-
-      if (oldSection) {
-        oldSection.remove();
-      }
-
-      const gradesSection = document.createElement("section");
-
-      gradesSection.id = "grades-section";
-      gradesSection.className = "main-section container";
-
-      gradesSection.innerHTML = `
-        <h2 class="section-title">${stage.name}</h2>
-        <p class="section-description">اختر الصف الدراسي.</p>
-        <div class="stages-grid">
-          ${gradesHTML}
-        </div>
-      `;
-
-      document.getElementById("library").after(gradesSection);
-
-      gradesSection.scrollIntoView({
-        behavior: "smooth"
-      });
-
     });
 
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // عرض المواد
+  function showSubjects(stageKey, gradeIndex) {
+    const stage = stages[stageKey];
+    const gradeName = stage.grades[gradeIndex];
+
+    clearDynamicSections();
+
+    const subjectsHTML = subjects.map(subject => `
+      <div class="card stage-card">
+        <h3>${subject}</h3>
+        <button class="primary-button" data-subject="${subject}">
+          عرض الكتب
+        </button>
+      </div>
+    `).join("");
+
+    const section = createSection(
+      gradeName,
+      "اختر المادة التي تريد تصفح كتبها.",
+      subjectsHTML
+    );
+
+    library.after(section);
+
+    section.querySelectorAll("[data-subject]").forEach(button => {
+      button.addEventListener("click", function () {
+        showBooks(stageKey, gradeIndex, button.dataset.subject);
+      });
+    });
+
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // عرض الكتب - واجهة مؤقتة حتى إضافة الكتب
+  function showBooks(stageKey, gradeIndex, subjectName) {
+    const stage = stages[stageKey];
+    const gradeName = stage.grades[gradeIndex];
+
+    clearDynamicSections();
+
+    const section = createSection(
+      subjectName,
+      `${stage.name} - ${gradeName}`,
+      `
+        <div class="card">
+          <h3>لا توجد كتب مضافة حاليًا</h3>
+          <p>سيتم إضافة الكتب الخاصة بهذه المادة قريبًا.</p>
+        </div>
+      `
+    );
+
+    library.after(section);
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // أزرار اختيار المرحلة
+  document.querySelectorAll("[data-stage]").forEach(button => {
+    button.addEventListener("click", function () {
+      showGrades(button.dataset.stage);
+    });
   });
+
+  // البحث المبدئي
+  const searchInput = document.getElementById("book-search");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      const query = searchInput.value.trim();
+
+      if (!query) {
+        latestBooks.innerHTML = `
+          <div class="card">
+            <p>سيتم إضافة الكتب قريبًا.</p>
+          </div>
+        `;
+        return;
+      }
+
+      latestBooks.innerHTML = `
+        <div class="card">
+          <p>بحث عن: ${query.replace(/[&<>"']/g, "")}</p>
+          <p>سيتم تفعيل البحث في الكتب بعد إضافة محتوى المكتبة.</p>
+        </div>
+      `;
+    });
+  }
 
 });
