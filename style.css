@@ -279,3 +279,55 @@ footer {
     padding: 20px;
   }
 }
+/* بطاقات الصفوف والمواد الديناميكية */
+
+.dynamic-section {
+  animation: sectionAppear 0.3s ease;
+}
+
+.grade-card,
+.stage-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.grade-card h3,
+.stage-card h3 {
+  color: var(--primary-dark);
+}
+
+.dynamic-section .primary-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.dynamic-section .card {
+  min-height: 160px;
+}
+
+@keyframes sectionAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* تحسين العرض على الموبايل */
+
+@media (max-width: 600px) {
+  .dynamic-section .card {
+    min-height: 130px;
+    padding: 18px;
+  }
+
+  .dynamic-section .section-title {
+    margin-bottom: 8px;
+  }
+}
