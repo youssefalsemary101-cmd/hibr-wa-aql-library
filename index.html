@@ -103,6 +103,7 @@
       overflow: hidden;
     }
 
+    /* أحدث الكتب */
     #latest-books-container {
       margin-top: 30px;
     }
@@ -185,6 +186,75 @@
       margin-bottom: 20px;
     }
 
+    /* قسم التواصل */
+    .contact-footer {
+      margin-top: 45px;
+      padding: 35px 20px 25px;
+      background: var(--surface, #fff);
+      border-top: 1px solid var(--border, #dce8df);
+      color: var(--text, #183b2a);
+    }
+
+    .contact-footer-inner {
+      max-width: 850px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .contact-footer-title {
+      font-size: 23px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: var(--primary, #248b52);
+    }
+
+    .contact-footer-description {
+      opacity: .75;
+      margin-bottom: 22px;
+      line-height: 1.8;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .contact-link {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 20px;
+      border: 1px solid var(--border, #dce8df);
+      border-radius: 12px;
+      background: var(--surface, #fff);
+      color: var(--text, #183b2a);
+      text-decoration: none;
+      font-weight: 600;
+      transition: .2s ease;
+    }
+
+    .contact-link:hover {
+      background: var(--surface-soft, #edf5ef);
+      transform: translateY(-2px);
+    }
+
+    .contact-link.whatsapp {
+      background: var(--primary, #248b52);
+      border-color: var(--primary, #248b52);
+      color: #fff;
+    }
+
+    .contact-footer-bottom {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border, #dce8df);
+      font-size: 13px;
+      opacity: .7;
+    }
+
     @media (min-width: 900px) {
       .menu-toggle {
         top: 20px;
@@ -204,6 +274,7 @@
 
 <body>
 
+  <!-- زر القائمة -->
   <button
     type="button"
     id="menu-toggle"
@@ -216,6 +287,7 @@
 
   <div id="menu-overlay" class="menu-overlay"></div>
 
+  <!-- القائمة الجانبية -->
   <aside id="side-menu" class="side-menu" aria-label="القائمة الرئيسية">
 
     <div class="side-menu-title">حبر وعقل 📚</div>
@@ -239,14 +311,15 @@
       أحدث الكتب
     </a>
 
+    <!-- مكان نظام طلب الكتب -->
+    <a href="#" id="menu-request-book">
+      <span class="menu-icon">📩</span>
+      طلب كتاب جديد
+    </a>
+
     <a href="#about-library" id="menu-about">
       <span class="menu-icon">ℹ️</span>
       عن المكتبة
-    </a>
-
-    <a href="#contact-library" id="menu-contact">
-      <span class="menu-icon">✉️</span>
-      تواصل معنا
     </a>
 
     <a href="admin.html">
@@ -258,6 +331,7 @@
 
   <header>
     <div class="container header-content">
+
       <a href="./" class="logo">حبر وعقل</a>
 
       <button
@@ -269,12 +343,15 @@
       >
         🌙
       </button>
+
     </div>
   </header>
 
   <main>
 
+    <!-- الرئيسية -->
     <section id="home" class="container main-section">
+
       <div class="home-content">
 
         <div class="home-icon">📚</div>
@@ -297,26 +374,32 @@
         </a>
 
       </div>
+
     </section>
 
+    <!-- المكتبة -->
     <section class="main-section container" id="library" hidden>
 
       <div id="wizard">
 
         <div class="wizard-progress">
+
           <p id="step-counter">الخطوة 1</p>
 
           <div class="progress-track">
             <div id="progress-fill"></div>
           </div>
+
         </div>
 
         <div id="wizard-content">
+
           <h1 class="section-title">اختر المرحلة الدراسية</h1>
 
           <p class="section-description">
             حدد المرحلة التعليمية للبدء.
           </p>
+
         </div>
 
         <div class="wizard-controls">
@@ -340,8 +423,10 @@
           </button>
 
         </div>
+
       </div>
 
+      <!-- البحث -->
       <div id="book-search-area" hidden>
 
         <h2 class="section-title">ابحث عن كتاب</h2>
@@ -368,10 +453,13 @@
         </button>
 
         <div class="latest-heading">
+
           <h2 class="section-title">أحدث الكتب ⭐</h2>
+
           <p class="section-description">
             أحدث الكتب التي تمت إضافتها إلى المكتبة.
           </p>
+
         </div>
 
         <div id="latest-books-results" class="latest-books-grid"></div>
@@ -380,37 +468,64 @@
 
     </section>
 
+    <!-- عن المكتبة -->
     <section
       id="about-library"
       class="container main-section"
       style="padding:25px 20px;"
     >
+
       <h2 class="section-title">عن حبر وعقل</h2>
 
       <p class="section-description">
         مكتبة تعليمية تهدف إلى جمع الكتب الدراسية وتنظيمها
         لتسهيل الوصول إليها.
       </p>
-    </section>
 
-    <section
-      id="contact-library"
-      class="container main-section"
-      style="padding:25px 20px;"
-    >
-      <h2 class="section-title">تواصل معنا</h2>
-
-      <p class="section-description">
-        حبر وعقل - المكتبة التعليمية.
-      </p>
     </section>
 
   </main>
 
-  <footer>
-    © حبر وعقل - جميع الحقوق محفوظة
+  <!-- التواصل والفوتر -->
+  <footer class="contact-footer">
+
+    <div class="contact-footer-inner">
+
+      <div class="contact-footer-title">تواصل مع حبر وعقل</div>
+
+      <p class="contact-footer-description">
+        يسعدنا استقبال رسائلك واستفساراتك.
+      </p>
+
+      <div class="contact-links">
+
+        <a
+          class="contact-link"
+          href="mailto:youssefalsemary101@gmail.com"
+        >
+          ✉️ البريد الإلكتروني
+        </a>
+
+        <a
+          class="contact-link whatsapp"
+          href="https://wa.me/201507896448"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          💬 تواصل عبر واتساب
+        </a>
+
+      </div>
+
+      <div class="contact-footer-bottom">
+        © حبر وعقل - جميع الحقوق محفوظة
+      </div>
+
+    </div>
+
   </footer>
 
+  <!-- ملفات الموقع -->
   <script src="curriculum.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -621,9 +736,13 @@
       document.getElementById("latest-back-button")
         .addEventListener("click", showWizard);
 
-      document.querySelectorAll("#menu-about, #menu-contact")
-        .forEach(function (link) {
-          link.addEventListener("click", closeMenu);
+      // زر طلب كتاب - سنربطه بنظام الطلبات لاحقًا
+      document.getElementById("menu-request-book")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          closeMenu();
+
+          alert("خدمة طلب الكتب ستكون متاحة قريبًا بإذن الله.");
         });
 
       menuToggle.addEventListener("click", function () {
@@ -678,6 +797,7 @@
             "content",
             theme === "dark" ? "#101A16" : "#F5F9F6"
           );
+
       }
 
       let savedTheme = "light";
@@ -700,6 +820,7 @@
         } catch (error) {}
 
         applyTheme(nextTheme);
+
       });
 
     });
