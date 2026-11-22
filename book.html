@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>صفحة الكتاب | حبر وعقل</title>
+
+  <meta name="description" content="صفحة الكتاب من مكتبة حبر وعقل التعليمية">
+
+  <link rel="stylesheet" href="style.css?v=10">
+
+  <style>
+    .book-page {
+      max-width: 900px;
+      margin: 35px auto;
+      padding: 20px;
+    }
+
+    .book-page-card {
+      background: var(--surface, #ffffff);
+      color: var(--text, #183b2a);
+      border: 1px solid var(--border, #e3eae5);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+
+    .book-page-cover {
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    .book-page-title {
+      margin: 10px 0 20px;
+      text-align: center;
+    }
+
+    .book-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .book-info-item {
+      background: var(--surface-soft, #edf5ef);
+      padding: 14px;
+      border-radius: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .book-description {
+      line-height: 1.9;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
+
+    .book-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .book-actions a,
+    .book-actions button {
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .book-page-message {
+      text-align: center;
+      padding: 35px 15px;
+    }
+
+    @media (max-width: 600px) {
+      .book-page {
+        padding: 12px;
+        margin: 15px auto;
+      }
+
+      .book-page-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="main-header">
+    <div class="container header-content">
+      <a href="./" class="logo" style="text-decoration:none;">
+        حبر وعقل
+      </a>
+    </div>
+  </header>
+
+  <main class="book-page">
+    <div id="book-content" class="book-page-card">
+      <div class="book-page-message">
+        <h2>جاري تحميل بيانات الكتاب...</h2>
+        <p>يرجى الانتظار.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;">
+      <a href="./" class="primary-button" style="text-decoration:none;">
+        العودة إلى المكتبة
+      </a>
+    </div>
+  </main>
+
+  <footer class="main-footer">
+    <div class="container">
+      <p>حبر وعقل | يوسف السمري</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js?v=1"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      const content = document.getElementById("book-content");
+
+      function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]);
+      }
+
+      function safeURL(value) {
+        try {
+          const url = new URL(value);
+
+          return ["https:", "http:"].includes(url.protocol)
+            ? url.href
+            : "";
+        } catch {
+          return "";
+        }
+      }
+
+      function getGradeName(stage, grade) {
+        const number = Number(grade);
+
+        if (stage === "primary") return `الصف ${number} الابتدائي`;
+        if (stage === "preparatory") return `الصف ${number} الإعدادي`;
+        if (stage === "secondary") return `الصف ${number} الثانوي`;
+        if (stage === "baccalaureate") return `الصف ${number} البكالوريا`;
+
+        return `الصف ${grade || "غير محدد"}`;
+      }
+
+      function getTermName(term) {
+        if (term === "term1") return "الفصل الدراسي الأول";
+        if (term === "term2") return "الفصل الدراسي الثاني";
+        return term || "غير محدد";
+      }
+
+      function showError(message) {
+        content.innerHTML = `
+          <div class="book-page-message">
+            <h2>${escapeHTML(message)}</h2>
+            <p>يمكنك العودة إلى المكتبة وتصفح الكتب المتاحة.</p>
+          </div>
+        `;
+      }
+
+      const bookId = new URLSearchParams(window.location.search)
+        .get("id");
+
+      if (!bookId) {
+        showError("رابط الكتاب غير صحيح.");
+        return;
+      }
+
+      if (!window.supabaseClient) {
+        showError("تعذر الاتصال بقاعدة البيانات.");
+        return;
+      }
+
+      try {
+        const { data: book, error } = await window.supabaseClient
+          .from("books")
+          .select("*")
+          .eq("id", bookId)
+          .maybeSingle();
+
+        if (error) {
+          console.error(error);
+          showError("تعذر تحميل بيانات الكتاب.");
+          return;
+        }
+
+        if (!book) {
+          showError("الكتاب غير موجود أو تم حذفه.");
+          return;
+        }
+
+        let coverURL = "";
+
+        if (book.cover_path) {
+          const { data: imageData } = window.supabaseClient
+            .storage
+            .from("book-covers")
+            .getPublicUrl(book.cover_path);
+
+          coverURL = safeURL(imageData?.publicUrl);
+        }
+
+        const bookURL = safeURL(book.book_url);
+
+        const shareURL = window.location.href;
+        const shareText = `كتاب ${book.title} من مكتبة حبر وعقل`;
+
+        const whatsappURL =
+          "https://wa.me/?text=" +
+          encodeURIComponent(shareText + "\n" + shareURL);
+
+        const facebookURL =
+          "https://www.facebook.com/sharer/sharer.php?u=" +
+          encodeURIComponent(shareURL);
+
+        const telegramURL =
+          "https://t.me/share/url?url=" +
+          encodeURIComponent(shareURL) +
+          "&text=" + encodeURIComponent(shareText);
+
+        document.title = book.title + " | حبر وعقل";
+
+        content.innerHTML = `
+          ${
+            coverURL
+              ? `
+                <img
+                  class="book-page-cover"
+                  src="${escapeHTML(coverURL)}"
+                  alt="${escapeHTML(book.title)}"
+                >
+              `
+              : `
+                <div style="
+                  text-align:center;
+                  font-size:65px;
+                  padding:35px;
+                ">📚</div>
+              `
+          }
+
+          <h1 class="book-page-title">
+            ${escapeHTML(book.title)}
+          </h1>
+
+          <div class="book-info">
+
+            <div class="book-info-item">
+              <strong>المرحلة الدراسية</strong>
+              <p>${escapeHTML(book.stage)}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>الصف الدراسي</strong>
+              <p>${escapeHTML(getGradeName(book.stage, book.grade))}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>الشعبة أو المسار</strong>
+              <p>${escapeHTML(book.option || "غير محدد")}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>المادة</strong>
+              <p>${escapeHTML(book.subject)}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>الفصل الدراسي</strong>
+              <p>${escapeHTML(getTermName(book.term))}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>السنة الدراسية</strong>
+              <p>${escapeHTML(book.academic_year || "غير محددة")}</p>
+            </div>
+
+            <div class="book-info-item">
+              <strong>حجم الملف</strong>
+              <p>${escapeHTML(book.file_size || "غير محدد")}</p>
+            </div>
+
+          </div>
+
+          <hr style="
+            border:0;
+            border-top:1px solid var(--border, #e3eae5);
+            margin:20px 0;
+          ">
+
+          <h3>نبذة عن الكتاب</h3>
+
+          <p class="book-description">
+            ${escapeHTML(book.description || "لا توجد نبذة مضافة لهذا الكتاب.")}
+          </p>
+
+          <div class="book-actions">
+
+            ${
+              bookURL
+                ? `
+                  <a
+                    class="primary-button"
+                    href="${escapeHTML(bookURL)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    فتح الكتاب
+                  </a>
+                `
+                : "<p>رابط فتح الكتاب غير متاح حاليًا.</p>"
+            }
+
+            <a
+              class="primary-button"
+              href="${escapeHTML(whatsappURL)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              مشاركة واتساب
+            </a>
+
+            <a
+              class="primary-button"
+              href="${escapeHTML(facebookURL)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              مشاركة فيسبوك
+            </a>
+
+            <a
+              class="primary-button"
+              href="${escapeHTML(telegramURL)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              مشاركة تليجرام
+            </a>
+
+            <button
+              class="primary-button"
+              type="button"
+              id="copy-book-link"
+            >
+              نسخ رابط الصفحة
+            </button>
+
+          </div>
+        `;
+
+        document.getElementById("copy-book-link")
+          .addEventListener("click", async function () {
+            try {
+              await navigator.clipboard.writeText(shareURL);
+              alert("تم نسخ رابط صفحة الكتاب.");
+            } catch {
+              const textArea = document.createElement("textarea");
+              textArea.value = shareURL;
+              document.body.appendChild(textArea);
+              textArea.select();
+
+              const copied = document.execCommand("copy");
+              textArea.remove();
+
+              if (copied) {
+                alert("تم نسخ رابط صفحة الكتاب.");
+              } else {
+                window.prompt("انسخ رابط الصفحة:", shareURL);
+              }
+            }
+          });
+
+      } catch (error) {
+        console.error("خطأ أثناء تحميل صفحة الكتاب:", error);
+        showError("حدث خطأ أثناء تحميل صفحة الكتاب.");
+      }
+    });
+  </script>
+
+</body>
+</html>
