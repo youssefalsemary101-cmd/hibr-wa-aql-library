@@ -1,14 +1,26 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
   const library = document.getElementById("library");
-
-  const latestBooks =
-    document.getElementById("latest-books-container") ||
-    document.getElementById("latest-books");
-
+  const wizardContent = document.getElementById("wizard-content");
+  const stepCounter = document.getElementById("step-counter");
+  const progressFill = document.getElementById("progress-fill");
+  const nextButton = document.getElementById("wizard-next");
+  const backButton = document.getElementById("wizard-back");
+  const searchArea = document.getElementById("book-search-area");
   const searchInput = document.getElementById("book-search");
+  const searchResults = document.getElementById("search-results");
 
   let bookDatabase = [];
+  let steps = [];
+  let currentStep = 0;
+
+  const selected = {
+    stage: "",
+    grade: "",
+    option: "",
+    subject: "",
+    term: ""
+  };
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -35,7 +47,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   function getTermName(term) {
     if (term === "term1") return "الفصل الدراسي الأول";
     if (term === "term2") return "الفصل الدراسي الثاني";
-
     return term || "غير محدد";
   }
 
@@ -61,76 +72,116 @@ document.addEventListener("DOMContentLoaded", async function () {
     return `الصف ${gradeKey}`;
   }
 
-  function showLatestMessage(message) {
-    if (latestBooks) {
-      latestBooks.innerHTML = `
-        <div class="card">
-          <p>${escapeHTML(message)}</p>
-        </div>
-      `;
-    }
+  function getStageData() {
+    return curriculum[selected.stage];
   }
 
-  function clearDynamicSections() {
-    document.querySelectorAll(".dynamic-section").forEach(section => {
-      section.remove();
+  function getGradeData() {
+    const stage = getStageData();
+
+    return stage?.grades?.[selected.grade];
+  }
+
+  function getSubjectList() {
+    const gradeData = getGradeData();
+
+    if (Array.isArray(gradeData)) {
+      return gradeData;
+    }
+
+    if (gradeData && selected.option) {
+      return gradeData[selected.option] || [];
+    }
+
+    return [];
+  }
+
+  function rebuildSteps() {
+    steps = [
+      {
+        key: "stage",
+        title: "اختر المرحلة الدراسية",
+        description: "حدد المرحلة التعليمية التي تدرس بها.",
+        options: Object.entries(curriculum).map(([key, value]) => ({
+          value: key,
+          label: value.name
+        }))
+      }
+    ];
+
+    if (!selected.stage) return;
+
+    const stage = getStageData();
+
+    steps.push({
+      key: "grade",
+      title: "اختر الصف الدراسي",
+      description: `المرحلة المختارة: ${stage.name}`,
+      options: Object.keys(stage.grades).map(key => ({
+        value: key,
+        label: getGradeName(selected.stage, key)
+      }))
+    });
+
+    if (!selected.grade) return;
+
+    const gradeData = getGradeData();
+
+    if (!Array.isArray(gradeData)) {
+      steps.push({
+        key: "option",
+        title: "اختر الشعبة أو المسار",
+        description: getGradeName(selected.stage, selected.grade),
+        options: Object.keys(gradeData).map(option => ({
+          value: option,
+          label: option
+        }))
+      });
+
+      if (!selected.option) return;
+    }
+
+    const subjects = getSubjectList();
+
+    steps.push({
+      key: "subject",
+      title: "اختر المادة الدراسية",
+      description: getGradeName(selected.stage, selected.grade),
+      options: subjects.map(subject => ({
+        value: subject,
+        label: subject
+      }))
+    });
+
+    if (!selected.subject) return;
+
+    steps.push({
+      key: "term",
+      title: "اختر الفصل الدراسي",
+      description: selected.subject,
+      options: [
+        {
+          value: "term1",
+          label: "الفصل الدراسي الأول"
+        },
+        {
+          value: "term2",
+          label: "الفصل الدراسي الثاني"
+        }
+      ]
+    });
+
+    if (!selected.term) return;
+
+    steps.push({
+      key: "books",
+      title: "الكتب الدراسية",
+      description:
+        `${selected.subject} - ${getGradeName(selected.stage, selected.grade)}`
     });
   }
 
-  function createSection(title, description, content, backFunction) {
-    const section = document.createElement("section");
-
-    section.className = "main-section container dynamic-section";
-
-    section.innerHTML = `
-      <button class="primary-button back-button" type="button">
-        ← رجوع
-      </button>
-
-      <h2 class="section-title">${escapeHTML(title)}</h2>
-
-      <p class="section-description">
-        ${escapeHTML(description)}
-      </p>
-
-      <div class="stages-grid">
-        ${content}
-      </div>
-    `;
-
-    section.querySelector(".back-button").addEventListener(
-      "click",
-      backFunction
-    );
-
-    return section;
-  }
-
-  function createCard(title, attribute, value) {
-    return `
-      <div class="card stage-card">
-        <h3>${escapeHTML(title)}</h3>
-
-        <button
-          class="primary-button"
-          ${attribute}="${escapeHTML(value)}"
-        >
-          عرض
-        </button>
-      </div>
-    `;
-  }
-
-  function goHome() {
-    clearDynamicSections();
-
-    if (library) {
-      library.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-
-  // إنشاء رابط صفحة الكتاب الخاصة
-  function getBookPageURL(book) {
+  function createBookPageURL(book) {
     if (!book.id) return "";
 
     const url = new URL(window.location.href);
@@ -142,7 +193,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     return url.href;
   }
 
-  // أزرار مشاركة الكتاب
   function createShareButtons(book) {
     if (!book.id) return "";
 
@@ -154,10 +204,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         border-radius:12px;
         text-align:center;
       ">
-
-        <h4 style="margin:0 0 12px;">
-          مشاركة الكتاب
-        </h4>
+        <h4>مشاركة الكتاب</h4>
 
         <div style="
           display:flex;
@@ -165,52 +212,34 @@ document.addEventListener("DOMContentLoaded", async function () {
           gap:8px;
           justify-content:center;
         ">
-
-          <button
-            type="button"
-            class="primary-button"
+          <button class="primary-button"
             data-share-action="whatsapp"
-            data-book-id="${escapeHTML(book.id)}"
-            style="background:#25D366;"
-          >
+            data-book-id="${escapeHTML(book.id)}">
             واتساب
           </button>
 
-          <button
-            type="button"
-            class="primary-button"
+          <button class="primary-button"
             data-share-action="facebook"
-            data-book-id="${escapeHTML(book.id)}"
-            style="background:#1877F2;"
-          >
+            data-book-id="${escapeHTML(book.id)}">
             فيسبوك
           </button>
 
-          <button
-            type="button"
-            class="primary-button"
+          <button class="primary-button"
             data-share-action="telegram"
-            data-book-id="${escapeHTML(book.id)}"
-            style="background:#229ED9;"
-          >
+            data-book-id="${escapeHTML(book.id)}">
             تليجرام
           </button>
 
-          <button
-            type="button"
-            class="primary-button"
+          <button class="primary-button"
             data-share-action="copy"
-            data-book-id="${escapeHTML(book.id)}"
-          >
+            data-book-id="${escapeHTML(book.id)}">
             نسخ الرابط
           </button>
-
         </div>
       </div>
     `;
   }
 
-  // إنشاء بطاقة الكتاب
   function createBookCard(book) {
     const coverURL = safeURL(book.cover);
     const bookURL = safeURL(book.url);
@@ -255,74 +284,32 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         ${createShareButtons(book)}
 
-        <div
-          class="book-details"
-          style="
-            margin-top:18px;
-            padding:18px;
-            border:1px solid #E3EAE5;
-            border-radius:14px;
-            text-align:right;
-          "
-        >
-
+        <div class="book-details" style="
+          margin-top:18px;
+          padding:18px;
+          border:1px solid #E3EAE5;
+          border-radius:14px;
+          text-align:right;
+        ">
           <h3>تفاصيل الكتاب</h3>
 
-          <p>
-            <strong>المادة:</strong>
-            ${escapeHTML(book.subject)}
-          </p>
+          <p><strong>المادة:</strong> ${escapeHTML(book.subject)}</p>
+          <p><strong>المرحلة:</strong> ${escapeHTML(curriculum[book.stage]?.name || book.stage)}</p>
+          <p><strong>الصف:</strong> ${escapeHTML(getGradeName(book.stage, book.grade))}</p>
+          <p><strong>الشعبة أو المسار:</strong> ${escapeHTML(book.option || "غير محدد")}</p>
+          <p><strong>الفصل الدراسي:</strong> ${escapeHTML(getTermName(book.term))}</p>
+          <p><strong>السنة الدراسية:</strong> ${escapeHTML(book.academic_year || "غير محددة")}</p>
+          <p><strong>حجم الكتاب:</strong> ${escapeHTML(book.file_size || "غير محدد")}</p>
 
-          <p>
-            <strong>المرحلة:</strong>
-            ${escapeHTML(book.stage)}
-          </p>
-
-          <p>
-            <strong>الصف:</strong>
-            ${escapeHTML(book.grade)}
-          </p>
-
-          <p>
-            <strong>الشعبة أو المسار:</strong>
-            ${escapeHTML(book.option || "غير محدد")}
-          </p>
-
-          <p>
-            <strong>الفصل الدراسي:</strong>
-            ${escapeHTML(getTermName(book.term))}
-          </p>
-
-          <p>
-            <strong>السنة الدراسية:</strong>
-            ${escapeHTML(book.academic_year || "غير محددة")}
-          </p>
-
-          <p>
-            <strong>حجم الكتاب:</strong>
-            ${escapeHTML(book.file_size || "غير محدد")}
-          </p>
-
-          <hr style="
-            margin:12px 0;
-            border:0;
-            border-top:1px solid #E3EAE5;
-          ">
+          <hr style="margin:12px 0;border:0;border-top:1px solid #E3EAE5;">
 
           <h4>نبذة عن الكتاب</h4>
-
-          <p>
-            ${escapeHTML(
-              book.description || "لا توجد نبذة مضافة لهذا الكتاب."
-            )}
-          </p>
-
+          <p>${escapeHTML(book.description || "لا توجد نبذة مضافة لهذا الكتاب.")}</p>
         </div>
       </div>
     `;
   }
 
-  // تنفيذ المشاركة
   async function shareBook(action, bookId) {
     const book = bookDatabase.find(item =>
       String(item.id) === String(bookId)
@@ -333,10 +320,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       return;
     }
 
-    const shareURL = getBookPageURL(book);
+    const shareURL = createBookPageURL(book);
 
     if (!shareURL) {
-      alert("تعذر إنشاء رابط مشاركة الكتاب.");
+      alert("تعذر إنشاء رابط المشاركة.");
       return;
     }
 
@@ -345,32 +332,27 @@ document.addEventListener("DOMContentLoaded", async function () {
     let targetURL = "";
 
     if (action === "whatsapp") {
-      targetURL =
-        "https://wa.me/?text=" +
+      targetURL = "https://wa.me/?text=" +
         encodeURIComponent(shareText + "\n" + shareURL);
     }
 
     if (action === "facebook") {
-      targetURL =
-        "https://www.facebook.com/sharer/sharer.php?u=" +
+      targetURL = "https://www.facebook.com/sharer/sharer.php?u=" +
         encodeURIComponent(shareURL);
     }
 
     if (action === "telegram") {
-      targetURL =
-        "https://t.me/share/url?url=" +
+      targetURL = "https://t.me/share/url?url=" +
         encodeURIComponent(shareURL) +
-        "&text=" +
-        encodeURIComponent(shareText);
+        "&text=" + encodeURIComponent(shareText);
     }
 
     if (action === "copy") {
       try {
         await navigator.clipboard.writeText(shareURL);
         alert("تم نسخ رابط صفحة الكتاب بنجاح.");
-      } catch (error) {
+      } catch {
         const textArea = document.createElement("textarea");
-
         textArea.value = shareURL;
         textArea.style.position = "fixed";
         textArea.style.opacity = "0";
@@ -379,7 +361,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         textArea.select();
 
         const copied = document.execCommand("copy");
-
         textArea.remove();
 
         if (copied) {
@@ -397,7 +378,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  // استقبال ضغطات أزرار المشاركة
   document.addEventListener("click", function (event) {
     const button = event.target.closest("[data-share-action]");
 
@@ -409,7 +389,244 @@ document.addEventListener("DOMContentLoaded", async function () {
     );
   });
 
-  // عرض صفحة كتاب تمت مشاركتها
+  function getMatchingBooks() {
+    return bookDatabase.filter(book =>
+      book.stage === selected.stage &&
+      String(book.grade) === String(selected.grade) &&
+      String(book.option || "") === String(selected.option || "") &&
+      book.subject === selected.subject &&
+      book.term === selected.term
+    );
+  }
+
+  function showBooks() {
+    const matchingBooks = getMatchingBooks();
+
+    wizardContent.innerHTML = `
+      <h2 class="section-title">الكتب الدراسية</h2>
+
+      <p class="section-description">
+        ${escapeHTML(selected.subject)}
+        - ${escapeHTML(getTermName(selected.term))}
+      </p>
+
+      <div class="books-grid">
+        ${
+          matchingBooks.length
+            ? matchingBooks.map(createBookCard).join("")
+            : `
+              <div class="card">
+                <h3>لا توجد كتب مضافة حاليًا</h3>
+                <p>سيتم توفير الكتب هنا عند إضافتها إلى المكتبة.</p>
+              </div>
+            `
+        }
+      </div>
+    `;
+
+    if (searchArea) {
+      searchArea.hidden = false;
+    }
+
+    if (nextButton) {
+      nextButton.hidden = true;
+    }
+  }
+
+  function renderStep() {
+    const step = steps[currentStep];
+
+    if (!step) return;
+
+    const total = steps.length;
+    const isBooksStep = step.key === "books";
+
+    if (stepCounter) {
+      stepCounter.textContent =
+        `الخطوة ${currentStep + 1} من ${total}`;
+    }
+
+    if (progressFill) {
+      progressFill.style.width =
+        `${((currentStep + 1) / total) * 100}%`;
+    }
+
+    if (backButton) {
+      backButton.hidden = currentStep === 0;
+    }
+
+    if (nextButton) {
+      nextButton.hidden = isBooksStep;
+      nextButton.disabled = !selected[step.key];
+      nextButton.textContent =
+        step.key === "term" ? "عرض الكتب" : "التالي";
+    }
+
+    if (searchArea) {
+      searchArea.hidden = !isBooksStep;
+    }
+
+    if (isBooksStep) {
+      showBooks();
+      return;
+    }
+
+    wizardContent.innerHTML = `
+      <h2 class="section-title">
+        ${escapeHTML(step.title)}
+      </h2>
+
+      <p class="section-description">
+        ${escapeHTML(step.description)}
+      </p>
+
+      <div class="stages-grid">
+        ${
+          step.options.map((option, index) => `
+            <button
+              type="button"
+              class="card stage-card choice-card ${
+                selected[step.key] === option.value
+                  ? "selected-choice"
+                  : ""
+              }"
+              data-choice-index="${index}"
+              style="
+                cursor:pointer;
+                width:100%;
+                border:2px solid ${
+                  selected[step.key] === option.value
+                    ? "#248B52"
+                    : "#E3EAE5"
+                };
+              "
+            >
+              <span style="font-size:18px;font-weight:bold;">
+                ${escapeHTML(option.label)}
+              </span>
+
+              <span style="color:#248B52;margin-top:10px;">
+                ${
+                  selected[step.key] === option.value
+                    ? "✓ تم الاختيار"
+                    : "اضغط للاختيار"
+                }
+              </span>
+            </button>
+          `).join("")
+        }
+      </div>
+    `;
+
+    wizardContent.querySelectorAll("[data-choice-index]")
+      .forEach(button => {
+        button.addEventListener("click", function () {
+          const option = step.options[
+            Number(button.dataset.choiceIndex)
+          ];
+
+          if (!option) return;
+
+          selectOption(step.key, option.value);
+        });
+      });
+  }
+
+  function selectOption(key, value) {
+    selected[key] = value;
+
+    if (key === "stage") {
+      selected.grade = "";
+      selected.option = "";
+      selected.subject = "";
+      selected.term = "";
+    }
+
+    if (key === "grade") {
+      selected.option = "";
+      selected.subject = "";
+      selected.term = "";
+    }
+
+    if (key === "option") {
+      selected.subject = "";
+      selected.term = "";
+    }
+
+    if (key === "subject") {
+      selected.term = "";
+    }
+
+    rebuildSteps();
+
+    const currentKey = steps[currentStep]?.key;
+
+    if (currentKey !== key) {
+      currentStep = steps.findIndex(item => item.key === key);
+    }
+
+    renderStep();
+  }
+
+  function goNext() {
+    const step = steps[currentStep];
+
+    if (!step || !selected[step.key]) return;
+
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      renderStep();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function goBack() {
+    if (currentStep <= 0) return;
+
+    currentStep--;
+    renderStep();
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener("click", goNext);
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", goBack);
+  }
+
+  function showSearchResults(value) {
+    if (!searchResults) return;
+
+    const query = value.trim().toLowerCase();
+
+    const matchingBooks = getMatchingBooks();
+
+    const results = query
+      ? matchingBooks.filter(book =>
+          [
+            book.title,
+            book.subject,
+            book.description
+          ].some(text =>
+            String(text || "").toLowerCase().includes(query)
+          )
+        )
+      : matchingBooks;
+
+    searchResults.innerHTML = results.length
+      ? results.map(createBookCard).join("")
+      : "<p>لم يتم العثور على كتب مطابقة.</p>";
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      showSearchResults(searchInput.value);
+    });
+  }
+
   function showSharedBook() {
     const params = new URLSearchParams(window.location.search);
     const sharedBookId = params.get("book");
@@ -421,7 +638,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     );
 
     const section = document.createElement("section");
-
     section.className = "main-section container dynamic-section";
 
     if (!book) {
@@ -439,9 +655,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     } else {
       section.innerHTML = `
         <h2 class="section-title">صفحة الكتاب</h2>
-        <p class="section-description">
-          مكتبة حبر وعقل التعليمية
-        </p>
+        <p class="section-description">مكتبة حبر وعقل التعليمية</p>
 
         ${createBookCard(book)}
 
@@ -463,275 +677,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     library.before(section);
-
     library.style.display = "none";
 
-    if (latestBooks) {
-      const latestSection = latestBooks.closest("section");
-
-      if (
-        latestSection &&
-        latestSection !== library.closest("section")
-      ) {
-        latestSection.style.display = "none";
-      }
-    }
-
     section.scrollIntoView({ behavior: "smooth" });
   }
 
-  // عرض الصفوف
-  function showGrades(stageKey) {
-    const stage = curriculum[stageKey];
-
-    if (!stage) return;
-
-    clearDynamicSections();
-
-    const gradesHTML = Object.keys(stage.grades)
-      .map(key =>
-        createCard(
-          getGradeName(stageKey, key),
-          "data-grade",
-          key
-        )
-      )
-      .join("");
-
-    const section = createSection(
-      stage.name,
-      "اختر الصف الدراسي.",
-      gradesHTML,
-      goHome
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-grade]").forEach(button => {
-      button.addEventListener("click", () => {
-        showGradeContent(stageKey, button.dataset.grade);
-      });
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // عرض الشعب والمسارات أو المواد
-  function showGradeContent(stageKey, gradeKey) {
-    const stage = curriculum[stageKey];
-
-    if (!stage || !stage.grades[gradeKey]) return;
-
-    const gradeData = stage.grades[gradeKey];
-
-    clearDynamicSections();
-
-    if (Array.isArray(gradeData)) {
-      showSubjects(
-        stageKey,
-        gradeKey,
-        "",
-        gradeData,
-        () => showGrades(stageKey)
-      );
-
-      return;
-    }
-
-    const optionsHTML = Object.keys(gradeData)
-      .map(option =>
-        createCard(option, "data-option", option)
-      )
-      .join("");
-
-    const section = createSection(
-      getGradeName(stageKey, gradeKey),
-      "اختر الشعبة أو المسار.",
-      optionsHTML,
-      () => showGrades(stageKey)
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-option]").forEach(button => {
-      button.addEventListener("click", () => {
-        const option = button.dataset.option;
-
-        showSubjects(
-          stageKey,
-          gradeKey,
-          option,
-          gradeData[option],
-          () => showGradeContent(stageKey, gradeKey)
-        );
-      });
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // عرض المواد
-  function showSubjects(
-    stageKey,
-    gradeKey,
-    optionName,
-    subjectList,
-    backFunction
-  ) {
-    clearDynamicSections();
-
-    const subjectsHTML = subjectList
-      .map(subject =>
-        createCard(subject, "data-subject", subject)
-      )
-      .join("");
-
-    const gradeName = getGradeName(stageKey, gradeKey);
-
-    const section = createSection(
-      optionName || gradeName,
-      optionName
-        ? `${gradeName} - ${optionName}`
-        : "اختر المادة.",
-      subjectsHTML,
-      backFunction
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-subject]").forEach(button => {
-      button.addEventListener("click", () => {
-        showBooks(
-          stageKey,
-          gradeKey,
-          optionName,
-          button.dataset.subject,
-          () => showSubjects(
-            stageKey,
-            gradeKey,
-            optionName,
-            subjectList,
-            backFunction
-          )
-        );
-      });
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // عرض كتب المادة
-  function showBooks(
-    stageKey,
-    gradeKey,
-    optionName,
-    subjectName,
-    backFunction
-  ) {
-    clearDynamicSections();
-
-    const matchingBooks = bookDatabase.filter(book =>
-      book.stage === stageKey &&
-      String(book.grade) === String(gradeKey) &&
-      String(book.option || "") === String(optionName || "") &&
-      book.subject === subjectName
-    );
-
-    const booksHTML = matchingBooks.length
-      ? matchingBooks.map(createBookCard).join("")
-      : `
-        <div class="card">
-          <h3>لا توجد كتب مضافة حاليًا</h3>
-          <p>
-            سيتم توفير الكتب هنا عند إضافتها إلى المكتبة.
-          </p>
-        </div>
-      `;
-
-    const section = createSection(
-      subjectName,
-      getGradeName(stageKey, gradeKey),
-      booksHTML,
-      backFunction
-    );
-
-    library.after(section);
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // أحدث الكتب
-  function showLatestBooks() {
-    if (!latestBooks) return;
-
-    latestBooks.innerHTML = bookDatabase.length
-      ? bookDatabase.slice(0, 6).map(createBookCard).join("")
-      : `
-        <div class="card">
-          <p>سيتم إضافة الكتب قريبًا.</p>
-        </div>
-      `;
-  }
-
-  // البحث
-  function showSearchResults(value) {
-    const query = value.trim().toLowerCase();
-
-    if (!query) {
-      const old = document.getElementById("search-results");
-
-      if (old) old.remove();
-
-      return;
-    }
-
-    let result = document.getElementById("search-results");
-
-    if (!result) {
-      result = document.createElement("section");
-
-      result.id = "search-results";
-      result.className = "container main-section";
-
-      library.after(result);
-    }
-
-    const matches = bookDatabase.filter(book =>
-      [
-        book.title,
-        book.subject,
-        book.description
-      ].some(text =>
-        String(text || "").toLowerCase().includes(query)
-      )
-    );
-
-    result.innerHTML = `
-      <h2 class="section-title">نتائج البحث</h2>
-
-      <div class="books-grid">
-        ${
-          matches.length
-            ? matches.map(createBookCard).join("")
-            : "<p>لم يتم العثور على كتب مطابقة.</p>"
-        }
-      </div>
-    `;
-  }
-
-  // تحميل الكتب من Supabase
   async function loadBooks() {
     if (!window.supabaseClient) {
-      console.error("اتصال Supabase غير جاهز.");
-
-      showLatestMessage(
-        "تعذر الاتصال بقاعدة البيانات. حاول تحديث الصفحة."
-      );
-
+      wizardContent.innerHTML = `
+        <div class="card">
+          <p>تعذر الاتصال بقاعدة البيانات. حاول تحديث الصفحة.</p>
+        </div>
+      `;
       return;
     }
-
-    showLatestMessage("جاري تحميل الكتب...");
 
     try {
       const { data, error } = await window.supabaseClient
@@ -742,10 +701,11 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (error) {
         console.error("تعذر تحميل الكتب:", error.message);
 
-        showLatestMessage(
-          "تعذر تحميل الكتب حاليًا. يرجى المحاولة لاحقًا."
-        );
-
+        wizardContent.innerHTML = `
+          <div class="card">
+            <p>تعذر تحميل الكتب حاليًا. يرجى المحاولة لاحقًا.</p>
+          </div>
+        `;
         return;
       }
 
@@ -768,55 +728,37 @@ document.addEventListener("DOMContentLoaded", async function () {
         };
       });
 
-      showLatestBooks();
-
       console.log(
         `تم تحميل ${bookDatabase.length} كتاب من Supabase.`
       );
 
-      // فتح صفحة الكتاب عند استخدام رابط المشاركة
       showSharedBook();
 
     } catch (error) {
-      console.error("حدث خطأ أثناء الاتصال:", error);
+      console.error("حدث خطأ أثناء تحميل الكتب:", error);
 
-      showLatestMessage(
-        "حدث خطأ أثناء تحميل الكتب. حاول مرة أخرى."
-      );
+      wizardContent.innerHTML = `
+        <div class="card">
+          <p>حدث خطأ أثناء تحميل الكتب. حاول مرة أخرى.</p>
+        </div>
+      `;
     }
   }
 
-  // التأكد من وجود عناصر الموقع
-  if (!library) {
-    console.error("عنصر المكتبة غير موجود في الصفحة.");
+  if (!library || !wizardContent) {
+    console.error("عناصر المكتبة غير موجودة.");
     return;
   }
 
-  // التأكد من تحميل المنهج
   if (typeof curriculum === "undefined") {
-    library.innerHTML = `
-      <p>
-        تعذر تحميل المنهج. تأكد من ملف curriculum.js.
-      </p>
+    wizardContent.innerHTML = `
+      <p>تعذر تحميل المنهج. تأكد من ملف curriculum.js.</p>
     `;
-
     return;
   }
 
-  // أزرار المراحل
-  document.querySelectorAll("[data-stage]").forEach(button => {
-    button.addEventListener("click", () => {
-      showGrades(button.dataset.stage);
-    });
-  });
+  rebuildSteps();
+  renderStep();
 
-  // البحث
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      showSearchResults(searchInput.value);
-    });
-  }
-
-  // تحميل الكتب عند فتح الصفحة
   await loadBooks();
 });
