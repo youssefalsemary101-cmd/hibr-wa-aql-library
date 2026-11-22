@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const library = document.getElementById("library");
   const latestBooks = document.getElementById("latest-books");
 
-  // التأكد من تحميل بيانات المنهج
   if (typeof curriculum === "undefined") {
     library.innerHTML = `
       <h2 class="section-title">تعذر تحميل المنهج</h2>
@@ -13,20 +12,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  // سجل التنقل للرجوع إلى الصفحة السابقة
-  let navigationHistory = [];
-
-  // الصفحة الحالية
-  let currentPage = null;
-
-  // تنظيف الأقسام التي يتم إنشاؤها أثناء التنقل
+  // تنظيف الأقسام السابقة
   function clearDynamicSections() {
     document.querySelectorAll(".dynamic-section").forEach(section => {
       section.remove();
     });
   }
 
-  // حماية النصوص التي تظهر داخل HTML
+  // حماية النصوص
   function escapeHTML(value) {
     return String(value).replace(/[&<>"']/g, function (char) {
       return {
@@ -39,58 +32,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // الانتقال إلى صفحة جديدة
-  function navigateTo(pageFunction) {
-    if (currentPage) {
-      navigationHistory.push(currentPage);
-    }
-
-    currentPage = pageFunction;
-    pageFunction();
-  }
-
-  // الرجوع للصفحة السابقة
-  function goBack() {
-    if (navigationHistory.length === 0) {
-      clearDynamicSections();
-      currentPage = null;
-      library.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-
-    const previousPage = navigationHistory.pop();
-
-    currentPage = previousPage;
-    previousPage();
-  }
-
-  // إنشاء زر الرجوع
-  function createBackButton() {
-    return `
-      <button class="primary-button back-button" type="button">
-        ← رجوع
-      </button>
-    `;
+  // زر الرجوع للصفحة الرئيسية
+  function goHome() {
+    clearDynamicSections();
+    library.scrollIntoView({ behavior: "smooth" });
   }
 
   // إنشاء قسم جديد
-  function createSection(title, description, content, showBack = true) {
+  function createSection(title, description, content, backFunction = goHome) {
+
     const section = document.createElement("section");
 
     section.className = "main-section container dynamic-section";
 
     section.innerHTML = `
-      ${showBack ? createBackButton() : ""}
+      <button class="primary-button back-button" type="button">
+        ← رجوع
+      </button>
+
       <h2 class="section-title">${escapeHTML(title)}</h2>
-      <p class="section-description">${escapeHTML(description)}</p>
-      <div class="stages-grid">${content}</div>
+
+      <p class="section-description">
+        ${escapeHTML(description)}
+      </p>
+
+      <div class="stages-grid">
+        ${content}
+      </div>
     `;
 
-    if (showBack) {
-      const backButton = section.querySelector(".back-button");
-
-      backButton.addEventListener("click", goBack);
-    }
+    section.querySelector(".back-button").addEventListener("click", function () {
+      backFunction();
+    });
 
     return section;
   }
@@ -100,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return `
       <div class="card stage-card">
         <h3>${escapeHTML(title)}</h3>
+
         <button class="primary-button" ${attribute}="${escapeHTML(value)}">
           ${escapeHTML(buttonText)}
         </button>
@@ -107,54 +81,9 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
   }
 
-  // عرض الصفوف
-  function showGrades(stageKey) {
-    const stage = curriculum[stageKey];
-
-    if (!stage) return;
-
-    clearDynamicSections();
-
-    const gradeEntries = Object.entries(stage.grades);
-
-    const gradesHTML = gradeEntries.map(([gradeKey]) => {
-
-      const gradeName = getGradeName(stageKey, gradeKey);
-
-      return createCard(
-        gradeName,
-        "عرض المواد",
-        "data-grade",
-        gradeKey
-      );
-
-    }).join("");
-
-    const section = createSection(
-      stage.name,
-      "اختر الصف الدراسي.",
-      gradesHTML
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-grade]").forEach(button => {
-      button.addEventListener("click", function () {
-
-        const gradeKey = button.dataset.grade;
-
-        navigateTo(function () {
-          showGradeContent(stageKey, gradeKey);
-        });
-
-      });
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // اسم الصف
+  // أسماء الصفوف
   function getGradeName(stageKey, gradeKey) {
+
     const number = Number(gradeKey);
 
     if (stageKey === "primary") {
@@ -176,8 +105,48 @@ document.addEventListener("DOMContentLoaded", function () {
     return `الصف ${gradeKey}`;
   }
 
-  // عرض المواد أو الشعب أو المسارات
+  // عرض الصفوف
+  function showGrades(stageKey) {
+
+    const stage = curriculum[stageKey];
+
+    if (!stage) return;
+
+    clearDynamicSections();
+
+    const gradesHTML = Object.keys(stage.grades).map(gradeKey => {
+
+      return createCard(
+        getGradeName(stageKey, gradeKey),
+        "عرض المواد",
+        "data-grade",
+        gradeKey
+      );
+
+    }).join("");
+
+    const section = createSection(
+      stage.name,
+      "اختر الصف الدراسي.",
+      gradesHTML
+    );
+
+    library.after(section);
+
+    section.querySelectorAll("[data-grade]").forEach(button => {
+
+      button.addEventListener("click", function () {
+        showGradeContent(stageKey, button.dataset.grade);
+      });
+
+    });
+
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // عرض محتويات الصف
   function showGradeContent(stageKey, gradeKey) {
+
     const stage = curriculum[stageKey];
 
     if (!stage || !stage.grades[gradeKey]) return;
@@ -187,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     clearDynamicSections();
 
-    // إذا كانت بيانات الصف عبارة عن قائمة مواد
+    // الصف الذي يحتوي على مواد مباشرة
     if (Array.isArray(gradeData)) {
 
       showSubjects(
@@ -196,52 +165,56 @@ document.addEventListener("DOMContentLoaded", function () {
         null,
         gradeData,
         function () {
-          showGradeContent(stageKey, gradeKey);
+          showGrades(stageKey);
         }
       );
 
       return;
     }
 
-    // إذا كان الصف يحتوي على شعب أو مسارات
+    // الصف الذي يحتوي على شعب أو مسارات
     if (typeof gradeData === "object" && gradeData !== null) {
 
       const optionsHTML = Object.keys(gradeData).map(option => {
+
         return createCard(
           option,
           "عرض المواد",
           "data-option",
           option
         );
+
       }).join("");
 
       const section = createSection(
         gradeName,
         "اختر الشعبة أو المسار.",
-        optionsHTML
+        optionsHTML,
+        function () {
+          showGrades(stageKey);
+        }
       );
 
       library.after(section);
 
       section.querySelectorAll("[data-option]").forEach(button => {
+
         button.addEventListener("click", function () {
 
           const optionName = button.dataset.option;
-          const optionData = gradeData[optionName];
 
-          navigateTo(function () {
-            showSubjects(
-              stageKey,
-              gradeKey,
-              optionName,
-              optionData,
-              function () {
-                showGradeContent(stageKey, gradeKey);
-              }
-            );
-          });
+          showSubjects(
+            stageKey,
+            gradeKey,
+            optionName,
+            gradeData[optionName],
+            function () {
+              showGradeContent(stageKey, gradeKey);
+            }
+          );
 
         });
+
       });
 
       section.scrollIntoView({ behavior: "smooth" });
@@ -256,17 +229,20 @@ document.addEventListener("DOMContentLoaded", function () {
     subjectList,
     backFunction
   ) {
+
     const gradeName = getGradeName(stageKey, gradeKey);
 
     clearDynamicSections();
 
     const subjectsHTML = subjectList.map(subject => {
+
       return createCard(
         subject,
         "فتح المادة",
         "data-subject",
         subject
       );
+
     }).join("");
 
     const title = optionName || gradeName;
@@ -278,40 +254,48 @@ document.addEventListener("DOMContentLoaded", function () {
     const section = createSection(
       title,
       description,
-      subjectsHTML
+      subjectsHTML,
+      backFunction
     );
 
     library.after(section);
 
-    // تحديد صفحة الرجوع
-    section.querySelector(".back-button").addEventListener("click", function () {
-      if (backFunction) {
-        backFunction();
-      }
-    });
-
     section.querySelectorAll("[data-subject]").forEach(button => {
+
       button.addEventListener("click", function () {
 
-        const subjectName = button.dataset.subject;
-
-        navigateTo(function () {
-          showBooks(
-            stageKey,
-            gradeKey,
-            optionName,
-            subjectName
-          );
-        });
+        showBooks(
+          stageKey,
+          gradeKey,
+          optionName,
+          button.dataset.subject,
+          function () {
+            showSubjects(
+              stageKey,
+              gradeKey,
+              optionName,
+              subjectList,
+              backFunction
+            );
+          }
+        );
 
       });
+
     });
 
     section.scrollIntoView({ behavior: "smooth" });
   }
 
   // صفحة الكتب
-  function showBooks(stageKey, gradeKey, optionName, subjectName) {
+  function showBooks(
+    stageKey,
+    gradeKey,
+    optionName,
+    subjectName,
+    backFunction
+  ) {
+
     const gradeName = getGradeName(stageKey, gradeKey);
 
     clearDynamicSections();
@@ -329,7 +313,8 @@ document.addEventListener("DOMContentLoaded", function () {
           <p>لا توجد كتب مضافة لهذه المادة حاليًا.</p>
           <p>سيتم توفير الكتب هنا عند إضافتها إلى المكتبة.</p>
         </div>
-      `
+      `,
+      backFunction
     );
 
     library.after(section);
@@ -337,27 +322,24 @@ document.addEventListener("DOMContentLoaded", function () {
     section.scrollIntoView({ behavior: "smooth" });
   }
 
-  // أزرار المراحل التعليمية
+  // أزرار المراحل
   document.querySelectorAll("[data-stage]").forEach(button => {
+
     button.addEventListener("click", function () {
-
-      navigationHistory = [];
-      currentPage = function () {
-        showGrades(button.dataset.stage);
-      };
-
       showGrades(button.dataset.stage);
-
     });
+
   });
 
   // أحدث الكتب
   if (latestBooks) {
+
     latestBooks.innerHTML = `
       <div class="card">
         <p>سيتم عرض أحدث الكتب المضافة هنا.</p>
       </div>
     `;
+
   }
 
 });
