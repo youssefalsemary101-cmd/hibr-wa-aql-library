@@ -795,3 +795,68 @@ body.dark-mode .theme-toggle {
   background: #405A49;
   border-color: #526B5A;
 }
+
+/* =====================================
+   الوضع الفاتح - أبيض وأخضر هادئ
+===================================== */
+
+html:not(.dark-mode) body,
+body:not(.dark-mode) {
+  background: #FFFFFF !important;
+  color: #263B2E !important;
+}
+
+body:not(.dark-mode) header {
+  background: #FFFFFF !important;
+}
+
+body:not(.dark-mode) #home,
+body:not(.dark-mode) #wizard,
+body:not(.dark-mode) #book-search-area,
+body:not(.dark-mode) .book-card {
+  background: #FFFFFF !important;
+  border-color: #E8EFE9 !important;
+}
+
+body:not(.dark-mode) .choice-card {
+  background: #F8FCF9 !important;
+  color: #263B2E !important;
+  border-color: #E5EEE7 !important;
+}
+
+body:not(.dark-mode) .choice-card:hover {
+  background: #EDF7F0 !important;
+}
+
+body:not(.dark-mode) .choice-card.selected-choice {
+  background: #287A4B !important;
+  color: #FFFFFF !important;
+}
+
+body:not(.dark-mode) .progress-track {
+  background: #EDF3EE !important;
+}
+
+body:not(.dark-mode) #book-search {
+  background: #FAFCFA !important;
+  color: #263B2E !important;
+  border-color: #E1EAE3 !important;
+}
+
+body:not(.dark-mode) .secondary-button {
+  background: #F1F7F2 !important;
+  color: #287A4B !important;
+  border-color: #E1EAE3 !important;
+}
+
+body:not(.dark-mode) footer {
+  background: #F7FAF7 !important;
+  color: #718076 !important;
+  border-color: #E8EFE9 !important;
+}
+
+body:not(.dark-mode) .theme-toggle {
+  background: #F1F7F2 !important;
+  color: #287A4B !important;
+  border-color: #E1EAE3 !important;
+}
