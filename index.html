@@ -175,5 +175,39 @@
     });
   </script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const themeButton = document.getElementById("theme-toggle");
+
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        document.body.classList.add("dark-mode");
+        themeButton.textContent = "☀️ الوضع الفاتح";
+      } else {
+        document.body.classList.remove("dark-mode");
+        themeButton.textContent = "🌙 الوضع الداكن";
+      }
+    }
+
+    const savedTheme = localStorage.getItem("hibr-theme") || "light";
+
+    applyTheme(savedTheme);
+
+    themeButton.addEventListener("click", function () {
+
+      const isDark = document.body.classList.contains("dark-mode");
+
+      const newTheme = isDark ? "light" : "dark";
+
+      localStorage.setItem("hibr-theme", newTheme);
+
+      applyTheme(newTheme);
+
+    });
+
+  });
+</script>
+
 </body>
 </html>
