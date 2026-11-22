@@ -436,19 +436,20 @@
         right: 22px;
       }
     }
-    /* تثبيت اسم حبر وعقل في منتصف الهيدر */
-.header-content {
-  position: relative;
-}
 
-.header-content .logo {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  white-space: nowrap;
-  z-index: 2;
-}
+    /* تثبيت اسم حبر وعقل في منتصف الهيدر */
+    .header-content {
+      position: relative;
+    }
+
+    .header-content .logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      white-space: nowrap;
+      z-index: 2;
+    }
   </style>
 
   <script>
@@ -832,6 +833,8 @@
 
       const home = document.getElementById("home");
       const library = document.getElementById("library");
+      const about = document.getElementById("about-library");
+
       const wizard = document.getElementById("wizard");
       const searchArea = document.getElementById("book-search-area");
       const latestContainer = document.getElementById("latest-books-container");
@@ -861,11 +864,14 @@
 
       function showWizard() {
         home.hidden = true;
+        about.hidden = true;
         library.hidden = false;
 
         wizard.hidden = false;
         searchArea.hidden = true;
         latestContainer.hidden = true;
+
+        closeMenu();
 
         window.scrollTo({
           top: 0,
@@ -875,7 +881,21 @@
 
       function showHome() {
         library.hidden = true;
+        about.hidden = true;
         home.hidden = false;
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+      function showAbout() {
+        home.hidden = true;
+        library.hidden = true;
+        about.hidden = false;
+
+        closeMenu();
 
         window.scrollTo({
           top: 0,
@@ -981,6 +1001,7 @@
 
       async function showLatestBooks() {
         home.hidden = true;
+        about.hidden = true;
         library.hidden = false;
 
         wizard.hidden = true;
@@ -1025,6 +1046,13 @@
 
       document.getElementById("latest-back-button")
         .addEventListener("click", showWizard);
+
+      // زر عن المكتبة
+      document.getElementById("menu-about")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          showAbout();
+        });
 
       // زر طلب كتاب - سنربطه بنظام الطلبات لاحقًا
       document.getElementById("menu-request-book")
