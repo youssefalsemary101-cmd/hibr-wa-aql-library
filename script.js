@@ -1,329 +1,93 @@
 
-document.addEventListener("DOMContentLoaded", function () {
-
+document.addEventListener("DOMContentLoaded", async function () {
   const library = document.getElementById("library");
-  const latestBooks = document.getElementById("latest-books");
+  const latestBooks = document.getElementById("latest-books-container")
+    || document.getElementById("latest-books");
+  const searchInput = document.getElementById("book-search");
 
-  if (typeof curriculum === "undefined") {
-    library.innerHTML = `
-      <h2 class="section-title">تعذر تحميل المنهج</h2>
-      <p>تأكد من وجود ملف curriculum.js.</p>
-    `;
-    return;
+  let bookDatabase = [];
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
   }
 
-  // التأكد من وجود قاعدة بيانات الكتب
-  const bookDatabase = typeof books !== "undefined" && Array.isArray(books)
-    ? books
-    : [];
+  function safeURL(value) {
+    try {
+      const url = new URL(value);
+      return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
 
-  // تنظيف الأقسام السابقة
+  function getTermName(term) {
+    if (term === "term1") return "الفصل الدراسي الأول";
+    if (term === "term2") return "الفصل الدراسي الثاني";
+    return term || "غير محدد";
+  }
+
+  function getGradeName(stageKey, gradeKey) {
+    const number = Number(gradeKey);
+
+    if (stageKey === "primary") return `الصف ${number} الابتدائي`;
+    if (stageKey === "preparatory") return `الصف ${number} الإعدادي`;
+    if (stageKey === "secondary") return `الصف ${number} الثانوي`;
+    if (stageKey === "baccalaureate") return `الصف ${number} البكالوريا`;
+
+    return `الصف ${gradeKey}`;
+  }
+
   function clearDynamicSections() {
     document.querySelectorAll(".dynamic-section").forEach(section => {
       section.remove();
     });
   }
 
-  // حماية النصوص
-  function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, function (char) {
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      }[char];
-    });
-  }
-
-  // التأكد من صحة الرابط
-  function safeURL(value) {
-    try {
-      const url = new URL(value);
-
-      if (url.protocol === "https:" || url.protocol === "http:") {
-        return url.href;
-      }
-
-      return "";
-    } catch {
-      return "";
-    }
-  }
-
-  // اسم الفصل الدراسي
-  function getTermName(term) {
-    if (term === "term1") return "الفصل الدراسي الأول";
-    if (term === "term2") return "الفصل الدراسي الثاني";
-    return "غير محدد";
-  }
-
-  // زر الرجوع
   function createSection(title, description, content, backFunction) {
-
     const section = document.createElement("section");
-
     section.className = "main-section container dynamic-section";
 
     section.innerHTML = `
       <button class="primary-button back-button" type="button">
         ← رجوع
       </button>
-
       <h2 class="section-title">${escapeHTML(title)}</h2>
-
-      <p class="section-description">
-        ${escapeHTML(description)}
-      </p>
-
-      <div class="stages-grid">
-        ${content}
-      </div>
+      <p class="section-description">${escapeHTML(description)}</p>
+      <div class="stages-grid">${content}</div>
     `;
 
-    section.querySelector(".back-button").addEventListener("click", function () {
-      backFunction();
-    });
-
+    section.querySelector(".back-button").addEventListener("click", backFunction);
     return section;
   }
 
-  // إنشاء بطاقة
-  function createCard(title, buttonText, attribute, value) {
+  function createCard(title, attribute, value) {
     return `
       <div class="card stage-card">
         <h3>${escapeHTML(title)}</h3>
-
         <button class="primary-button" ${attribute}="${escapeHTML(value)}">
-          ${escapeHTML(buttonText)}
+          عرض
         </button>
       </div>
     `;
   }
 
-  // اسم الصف
-  function getGradeName(stageKey, gradeKey) {
-
-    const number = Number(gradeKey);
-
-    if (stageKey === "primary") {
-      return `الصف ${number} الابتدائي`;
-    }
-
-    if (stageKey === "preparatory") {
-      return `الصف ${number} الإعدادي`;
-    }
-
-    if (stageKey === "secondary") {
-      return `الصف ${number} الثانوي`;
-    }
-
-    if (stageKey === "baccalaureate") {
-      return `الصف ${number} البكالوريا`;
-    }
-
-    return `الصف ${gradeKey}`;
-  }
-
-  // عرض الصفوف
-  function showGrades(stageKey) {
-
-    const stage = curriculum[stageKey];
-
-    if (!stage) return;
-
-    clearDynamicSections();
-
-    const gradesHTML = Object.keys(stage.grades).map(gradeKey => {
-
-      return createCard(
-        getGradeName(stageKey, gradeKey),
-        "عرض المواد",
-        "data-grade",
-        gradeKey
-      );
-
-    }).join("");
-
-    const section = createSection(
-      stage.name,
-      "اختر الصف الدراسي.",
-      gradesHTML,
-      goHome
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-grade]").forEach(button => {
-
-      button.addEventListener("click", function () {
-        showGradeContent(stageKey, button.dataset.grade);
-      });
-
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // الرجوع للرئيسية
   function goHome() {
     clearDynamicSections();
     library.scrollIntoView({ behavior: "smooth" });
   }
 
-  // عرض محتويات الصف
-  function showGradeContent(stageKey, gradeKey) {
-
-    const stage = curriculum[stageKey];
-
-    if (!stage || !stage.grades[gradeKey]) return;
-
-    const gradeData = stage.grades[gradeKey];
-    const gradeName = getGradeName(stageKey, gradeKey);
-
-    clearDynamicSections();
-
-    // الصف الذي يحتوي على مواد مباشرة
-    if (Array.isArray(gradeData)) {
-
-      showSubjects(
-        stageKey,
-        gradeKey,
-        null,
-        gradeData,
-        function () {
-          showGrades(stageKey);
-        }
-      );
-
-      return;
-    }
-
-    // الصف الذي يحتوي على شعب أو مسارات
-    if (typeof gradeData === "object" && gradeData !== null) {
-
-      const optionsHTML = Object.keys(gradeData).map(option => {
-
-        return createCard(
-          option,
-          "عرض المواد",
-          "data-option",
-          option
-        );
-
-      }).join("");
-
-      const section = createSection(
-        gradeName,
-        "اختر الشعبة أو المسار.",
-        optionsHTML,
-        function () {
-          showGrades(stageKey);
-        }
-      );
-
-      library.after(section);
-
-      section.querySelectorAll("[data-option]").forEach(button => {
-
-        button.addEventListener("click", function () {
-
-          const optionName = button.dataset.option;
-
-          showSubjects(
-            stageKey,
-            gradeKey,
-            optionName,
-            gradeData[optionName],
-            function () {
-              showGradeContent(stageKey, gradeKey);
-            }
-          );
-
-        });
-
-      });
-
-      section.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-
-  // عرض المواد
-  function showSubjects(
-    stageKey,
-    gradeKey,
-    optionName,
-    subjectList,
-    backFunction
-  ) {
-
-    const gradeName = getGradeName(stageKey, gradeKey);
-
-    clearDynamicSections();
-
-    const subjectsHTML = subjectList.map(subject => {
-
-      return createCard(
-        subject,
-        "فتح المادة",
-        "data-subject",
-        subject
-      );
-
-    }).join("");
-
-    const title = optionName || gradeName;
-
-    const description = optionName
-      ? `${gradeName} - ${optionName}`
-      : "اختر المادة التي تريد تصفح كتبها.";
-
-    const section = createSection(
-      title,
-      description,
-      subjectsHTML,
-      backFunction
-    );
-
-    library.after(section);
-
-    section.querySelectorAll("[data-subject]").forEach(button => {
-
-      button.addEventListener("click", function () {
-
-        showBooks(
-          stageKey,
-          gradeKey,
-          optionName,
-          button.dataset.subject,
-          function () {
-            showSubjects(
-              stageKey,
-              gradeKey,
-              optionName,
-              subjectList,
-              backFunction
-            );
-          }
-        );
-
-      });
-
-    });
-
-    section.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // إنشاء بطاقة كتاب
   function createBookCard(book) {
-
     const coverURL = safeURL(book.cover);
     const bookURL = safeURL(book.url);
 
     return `
       <div class="card book-card">
-
         ${
           coverURL
             ? `<img src="${escapeHTML(coverURL)}"
@@ -335,12 +99,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         <h3>${escapeHTML(book.title)}</h3>
 
-        <p>${escapeHTML(book.description || "كتاب تعليمي")}</p>
-
-        <p>
-          <strong>${escapeHTML(getTermName(book.term))}</strong>
-        </p>
-
         ${
           bookURL
             ? `<a class="primary-button"
@@ -349,47 +107,146 @@ document.addEventListener("DOMContentLoaded", function () {
                  rel="noopener noreferrer">
                  فتح الكتاب
                </a>`
-            : `<p>رابط الكتاب غير متاح حاليًا.</p>`
+            : "<p>رابط الكتاب غير متاح حاليًا.</p>"
         }
 
+        <div class="book-details"
+             style="margin-top:18px;padding:18px;border:1px solid #E3EAE5;border-radius:14px;text-align:right;">
+
+          <h3>تفاصيل الكتاب</h3>
+
+          <p><strong>المادة:</strong> ${escapeHTML(book.subject)}</p>
+          <p><strong>المرحلة:</strong> ${escapeHTML(book.stage)}</p>
+          <p><strong>الصف:</strong> ${escapeHTML(book.grade)}</p>
+          <p><strong>الشعبة أو المسار:</strong> ${escapeHTML(book.option || "غير محدد")}</p>
+          <p><strong>الفصل الدراسي:</strong> ${escapeHTML(getTermName(book.term))}</p>
+          <p><strong>السنة الدراسية:</strong> ${escapeHTML(book.academic_year || "غير محددة")}</p>
+          <p><strong>حجم الكتاب:</strong> ${escapeHTML(book.file_size || "غير محدد")}</p>
+
+          <hr style="margin:12px 0;border:0;border-top:1px solid #E3EAE5;">
+
+          <h4>نبذة عن الكتاب</h4>
+          <p>${escapeHTML(book.description || "لا توجد نبذة مضافة لهذا الكتاب.")}</p>
+        </div>
       </div>
     `;
   }
 
-  // صفحة الكتب
-  function showBooks(
-    stageKey,
-    gradeKey,
-    optionName,
-    subjectName,
-    backFunction
-  ) {
-
-    const gradeName = getGradeName(stageKey, gradeKey);
+  function showGrades(stageKey) {
+    const stage = curriculum[stageKey];
+    if (!stage) return;
 
     clearDynamicSections();
 
-    // البحث عن الكتب المطابقة
-    const matchingBooks = bookDatabase.filter(book => {
+    const gradesHTML = Object.keys(stage.grades)
+      .map(key => createCard(getGradeName(stageKey, key), "data-grade", key))
+      .join("");
 
-      return (
-        book.stage === stageKey &&
-        String(book.grade) === String(gradeKey) &&
-        String(book.option || "") === String(optionName || "") &&
-        book.subject === subjectName
-      );
+    const section = createSection(
+      stage.name,
+      "اختر الصف الدراسي.",
+      gradesHTML,
+      goHome
+    );
 
+    library.after(section);
+
+    section.querySelectorAll("[data-grade]").forEach(button => {
+      button.addEventListener("click", () => {
+        showGradeContent(stageKey, button.dataset.grade);
+      });
     });
 
-    const description = optionName
-      ? `${gradeName} - ${optionName}`
-      : gradeName;
+    section.scrollIntoView({ behavior: "smooth" });
+  }
 
-    // عرض الكتب أو رسالة عدم وجود كتب
-    const booksHTML = matchingBooks.length > 0
+  function showGradeContent(stageKey, gradeKey) {
+    const stage = curriculum[stageKey];
+    if (!stage || !stage.grades[gradeKey]) return;
 
+    const gradeData = stage.grades[gradeKey];
+
+    clearDynamicSections();
+
+    if (Array.isArray(gradeData)) {
+      showSubjects(stageKey, gradeKey, "", gradeData, () => showGrades(stageKey));
+      return;
+    }
+
+    const optionsHTML = Object.keys(gradeData)
+      .map(option => createCard(option, "data-option", option))
+      .join("");
+
+    const section = createSection(
+      getGradeName(stageKey, gradeKey),
+      "اختر الشعبة أو المسار.",
+      optionsHTML,
+      () => showGrades(stageKey)
+    );
+
+    library.after(section);
+
+    section.querySelectorAll("[data-option]").forEach(button => {
+      button.addEventListener("click", () => {
+        const option = button.dataset.option;
+        showSubjects(
+          stageKey,
+          gradeKey,
+          option,
+          gradeData[option],
+          () => showGradeContent(stageKey, gradeKey)
+        );
+      });
+    });
+
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function showSubjects(stageKey, gradeKey, optionName, subjectList, backFunction) {
+    clearDynamicSections();
+
+    const subjectsHTML = subjectList
+      .map(subject => createCard(subject, "data-subject", subject))
+      .join("");
+
+    const gradeName = getGradeName(stageKey, gradeKey);
+
+    const section = createSection(
+      optionName || gradeName,
+      optionName ? `${gradeName} - ${optionName}` : "اختر المادة.",
+      subjectsHTML,
+      backFunction
+    );
+
+    library.after(section);
+
+    section.querySelectorAll("[data-subject]").forEach(button => {
+      button.addEventListener("click", () => {
+        showBooks(
+          stageKey,
+          gradeKey,
+          optionName,
+          button.dataset.subject,
+          () => showSubjects(stageKey, gradeKey, optionName, subjectList, backFunction)
+        );
+      });
+    });
+
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function showBooks(stageKey, gradeKey, optionName, subjectName, backFunction) {
+    clearDynamicSections();
+
+    const matchingBooks = bookDatabase.filter(book =>
+      book.stage === stageKey &&
+      String(book.grade) === String(gradeKey) &&
+      String(book.option || "") === String(optionName || "") &&
+      book.subject === subjectName
+    );
+
+    const booksHTML = matchingBooks.length
       ? matchingBooks.map(createBookCard).join("")
-
       : `
         <div class="card">
           <h3>لا توجد كتب مضافة حاليًا</h3>
@@ -399,49 +256,111 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const section = createSection(
       subjectName,
-      description,
+      getGradeName(stageKey, gradeKey),
       booksHTML,
       backFunction
     );
 
     library.after(section);
-
     section.scrollIntoView({ behavior: "smooth" });
   }
 
-  // أحدث الكتب
   function showLatestBooks() {
-
     if (!latestBooks) return;
 
-    if (bookDatabase.length === 0) {
+    latestBooks.innerHTML = bookDatabase.length
+      ? bookDatabase.slice(0, 6).map(createBookCard).join("")
+      : "<p>سيتم إضافة الكتب قريبًا.</p>";
+  }
 
-      latestBooks.innerHTML = `
-        <div class="card">
-          <p>سيتم إضافة الكتب قريبًا.</p>
-        </div>
-      `;
+  function showSearchResults(value) {
+    const query = value.trim().toLowerCase();
 
+    if (!query) {
+      const old = document.getElementById("search-results");
+      if (old) old.remove();
       return;
     }
 
-    const latest = bookDatabase.slice(-6).reverse();
+    let result = document.getElementById("search-results");
 
-    latestBooks.innerHTML = latest
-      .map(createBookCard)
-      .join("");
+    if (!result) {
+      result = document.createElement("section");
+      result.id = "search-results";
+      result.className = "container main-section";
+      library.after(result);
+    }
+
+    const matches = bookDatabase.filter(book =>
+      [book.title, book.subject, book.description]
+        .some(text => String(text || "").toLowerCase().includes(query))
+    );
+
+    result.innerHTML = `
+      <h2 class="section-title">نتائج البحث</h2>
+      <div class="books-grid">
+        ${
+          matches.length
+            ? matches.map(createBookCard).join("")
+            : "<p>لم يتم العثور على كتب مطابقة.</p>"
+        }
+      </div>
+    `;
   }
 
-  // أزرار المراحل التعليمية
-  document.querySelectorAll("[data-stage]").forEach(button => {
+  async function loadBooks() {
+    if (!window.supabaseClient) {
+      console.error("اتصال Supabase غير جاهز.");
+      return;
+    }
 
-    button.addEventListener("click", function () {
-      showGrades(button.dataset.stage);
+    const { data, error } = await window.supabaseClient
+      .from("books")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("تعذر تحميل الكتب:", error.message);
+      latestBooks.innerHTML = "<p>تعذر تحميل الكتب حاليًا.</p>";
+      return;
+    }
+
+    bookDatabase = (data || []).map(book => {
+      let cover = "";
+
+      if (book.cover_path) {
+        const { data: imageData } = window.supabaseClient
+          .storage
+          .from("book-covers")
+          .getPublicUrl(book.cover_path);
+
+        cover = imageData.publicUrl;
+      }
+
+      return {
+        ...book,
+        cover,
+        url: book.book_url
+      };
     });
 
+    showLatestBooks();
+  }
+
+  if (typeof curriculum === "undefined") {
+    library.innerHTML = "<p>تعذر تحميل المنهج. تأكد من ملف curriculum.js.</p>";
+    return;
+  }
+
+  document.querySelectorAll("[data-stage]").forEach(button => {
+    button.addEventListener("click", () => showGrades(button.dataset.stage));
   });
 
-  // تشغيل أحدث الكتب
-  showLatestBooks();
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      showSearchResults(searchInput.value);
+    });
+  }
 
+  await loadBooks();
 });
