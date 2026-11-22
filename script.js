@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   let bookDatabase = [];
 
-  // حماية النصوص قبل عرضها داخل HTML
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
       "&": "&amp;",
@@ -21,7 +20,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     })[char]);
   }
 
-  // التأكد من سلامة الروابط
   function safeURL(value) {
     try {
       const url = new URL(value);
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     return `الصف ${gradeKey}`;
   }
 
-  // رسالة حالة تحميل الكتب
   function showLatestMessage(message) {
     if (latestBooks) {
       latestBooks.innerHTML = `
@@ -132,6 +129,87 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
+  // إنشاء رابط صفحة الكتاب الخاصة
+  function getBookPageURL(book) {
+    if (!book.id) return "";
+
+    const url = new URL(window.location.href);
+
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("book", book.id);
+
+    return url.href;
+  }
+
+  // أزرار مشاركة الكتاب
+  function createShareButtons(book) {
+    if (!book.id) return "";
+
+    return `
+      <div class="book-share" style="
+        margin-top:16px;
+        padding:14px;
+        border:1px solid #E3EAE5;
+        border-radius:12px;
+        text-align:center;
+      ">
+
+        <h4 style="margin:0 0 12px;">
+          مشاركة الكتاب
+        </h4>
+
+        <div style="
+          display:flex;
+          flex-wrap:wrap;
+          gap:8px;
+          justify-content:center;
+        ">
+
+          <button
+            type="button"
+            class="primary-button"
+            data-share-action="whatsapp"
+            data-book-id="${escapeHTML(book.id)}"
+            style="background:#25D366;"
+          >
+            واتساب
+          </button>
+
+          <button
+            type="button"
+            class="primary-button"
+            data-share-action="facebook"
+            data-book-id="${escapeHTML(book.id)}"
+            style="background:#1877F2;"
+          >
+            فيسبوك
+          </button>
+
+          <button
+            type="button"
+            class="primary-button"
+            data-share-action="telegram"
+            data-book-id="${escapeHTML(book.id)}"
+            style="background:#229ED9;"
+          >
+            تليجرام
+          </button>
+
+          <button
+            type="button"
+            class="primary-button"
+            data-share-action="copy"
+            data-book-id="${escapeHTML(book.id)}"
+          >
+            نسخ الرابط
+          </button>
+
+        </div>
+      </div>
+    `;
+  }
+
   // إنشاء بطاقة الكتاب
   function createBookCard(book) {
     const coverURL = safeURL(book.cover);
@@ -174,6 +252,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             `
             : "<p>رابط الكتاب غير متاح حاليًا.</p>"
         }
+
+        ${createShareButtons(book)}
 
         <div
           class="book-details"
@@ -242,6 +322,164 @@ document.addEventListener("DOMContentLoaded", async function () {
     `;
   }
 
+  // تنفيذ المشاركة
+  async function shareBook(action, bookId) {
+    const book = bookDatabase.find(item =>
+      String(item.id) === String(bookId)
+    );
+
+    if (!book) {
+      alert("تعذر العثور على الكتاب.");
+      return;
+    }
+
+    const shareURL = getBookPageURL(book);
+
+    if (!shareURL) {
+      alert("تعذر إنشاء رابط مشاركة الكتاب.");
+      return;
+    }
+
+    const shareText = `كتاب ${book.title} من مكتبة حبر وعقل`;
+
+    let targetURL = "";
+
+    if (action === "whatsapp") {
+      targetURL =
+        "https://wa.me/?text=" +
+        encodeURIComponent(shareText + "\n" + shareURL);
+    }
+
+    if (action === "facebook") {
+      targetURL =
+        "https://www.facebook.com/sharer/sharer.php?u=" +
+        encodeURIComponent(shareURL);
+    }
+
+    if (action === "telegram") {
+      targetURL =
+        "https://t.me/share/url?url=" +
+        encodeURIComponent(shareURL) +
+        "&text=" +
+        encodeURIComponent(shareText);
+    }
+
+    if (action === "copy") {
+      try {
+        await navigator.clipboard.writeText(shareURL);
+        alert("تم نسخ رابط صفحة الكتاب بنجاح.");
+      } catch (error) {
+        const textArea = document.createElement("textarea");
+
+        textArea.value = shareURL;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+
+        document.body.appendChild(textArea);
+        textArea.select();
+
+        const copied = document.execCommand("copy");
+
+        textArea.remove();
+
+        if (copied) {
+          alert("تم نسخ رابط صفحة الكتاب بنجاح.");
+        } else {
+          window.prompt("انسخ رابط الكتاب:", shareURL);
+        }
+      }
+
+      return;
+    }
+
+    if (targetURL) {
+      window.open(targetURL, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  // استقبال ضغطات أزرار المشاركة
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-share-action]");
+
+    if (!button) return;
+
+    shareBook(
+      button.dataset.shareAction,
+      button.dataset.bookId
+    );
+  });
+
+  // عرض صفحة كتاب تمت مشاركتها
+  function showSharedBook() {
+    const params = new URLSearchParams(window.location.search);
+    const sharedBookId = params.get("book");
+
+    if (!sharedBookId) return;
+
+    const book = bookDatabase.find(item =>
+      String(item.id) === String(sharedBookId)
+    );
+
+    const section = document.createElement("section");
+
+    section.className = "main-section container dynamic-section";
+
+    if (!book) {
+      section.innerHTML = `
+        <div class="card">
+          <h2>الكتاب غير موجود</h2>
+          <p>ربما تم حذف الكتاب أو أن الرابط غير صحيح.</p>
+          <a class="primary-button" href="${escapeHTML(
+            window.location.origin + window.location.pathname
+          )}">
+            العودة إلى المكتبة
+          </a>
+        </div>
+      `;
+    } else {
+      section.innerHTML = `
+        <h2 class="section-title">صفحة الكتاب</h2>
+        <p class="section-description">
+          مكتبة حبر وعقل التعليمية
+        </p>
+
+        ${createBookCard(book)}
+
+        <button
+          class="primary-button"
+          type="button"
+          id="return-to-library"
+          style="margin-top:16px;"
+        >
+          العودة إلى المكتبة
+        </button>
+      `;
+
+      section.querySelector("#return-to-library")
+        .addEventListener("click", function () {
+          window.location.href =
+            window.location.origin + window.location.pathname;
+        });
+    }
+
+    library.before(section);
+
+    library.style.display = "none";
+
+    if (latestBooks) {
+      const latestSection = latestBooks.closest("section");
+
+      if (
+        latestSection &&
+        latestSection !== library.closest("section")
+      ) {
+        latestSection.style.display = "none";
+      }
+    }
+
+    section.scrollIntoView({ behavior: "smooth" });
+  }
+
   // عرض الصفوف
   function showGrades(stageKey) {
     const stage = curriculum[stageKey];
@@ -278,7 +516,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     section.scrollIntoView({ behavior: "smooth" });
   }
 
-  // عرض الشُعب والمسارات أو المواد
+  // عرض الشعب والمسارات أو المواد
   function showGradeContent(stageKey, gradeKey) {
     const stage = curriculum[stageKey];
 
@@ -535,6 +773,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       console.log(
         `تم تحميل ${bookDatabase.length} كتاب من Supabase.`
       );
+
+      // فتح صفحة الكتاب عند استخدام رابط المشاركة
+      showSharedBook();
 
     } catch (error) {
       console.error("حدث خطأ أثناء الاتصال:", error);
