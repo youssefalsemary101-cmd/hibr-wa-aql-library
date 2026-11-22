@@ -565,3 +565,148 @@ footer {
     transition: none !important;
   }
 }
+
+/* =================================
+   الوضع الداكن
+================================= */
+
+body.dark-mode {
+  --primary: #70D69A;
+  --primary-dark: #A1E8B8;
+  --primary-light: #203F2E;
+  --green-soft: #1B3828;
+  --green-card: #243F30;
+  --green-deep: #101A16;
+  --background: #101A16;
+  --surface: #1B2C23;
+  --text: #F0F5F1;
+  --text-muted: #B4C8BA;
+  --border: #355541;
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.22);
+
+  background: #101A16;
+  color: #F0F5F1;
+}
+
+body.dark-mode header {
+  background: #14271D;
+  border-color: #355541;
+}
+
+body.dark-mode .logo {
+  color: #70D69A;
+}
+
+body.dark-mode #home {
+  background: linear-gradient(135deg, #142D20, #205438);
+  border-color: #355F43;
+}
+
+body.dark-mode #home .section-title {
+  color: #F0F5F1;
+}
+
+body.dark-mode #home .section-description {
+  color: #C5DCCB;
+}
+
+body.dark-mode #wizard {
+  background: linear-gradient(145deg, #14271D, #1B3325);
+  border-color: #355541;
+}
+
+body.dark-mode #wizard-content .section-title,
+body.dark-mode #step-counter {
+  color: #A1E8B8;
+}
+
+body.dark-mode #wizard-content .section-description {
+  color: #B4C8BA;
+}
+
+body.dark-mode .progress-track {
+  background: #294634;
+}
+
+body.dark-mode .card,
+body.dark-mode .choice-card {
+  background: linear-gradient(145deg, #203A2A, #294735) !important;
+  border-color: #426A4F !important;
+  color: #F0F5F1;
+}
+
+body.dark-mode .choice-card span,
+body.dark-mode .stage-card h3,
+body.dark-mode .book-card h3 {
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode .choice-card.selected-choice {
+  background: linear-gradient(145deg, #176B3D, #104F32) !important;
+  border-color: #70D69A !important;
+}
+
+body.dark-mode .choice-card.selected-choice span {
+  color: #FFFFFF !important;
+}
+
+body.dark-mode .secondary-button {
+  background: #294735;
+  color: #D7F0DF;
+  border-color: #426A4F;
+}
+
+body.dark-mode #book-search-area,
+body.dark-mode #book-search {
+  background: #1B3325;
+  color: #F0F5F1;
+  border-color: #426A4F;
+}
+
+body.dark-mode #book-search::placeholder {
+  color: #B4C8BA;
+}
+
+body.dark-mode .book-details,
+body.dark-mode .book-share {
+  background: #203A2A;
+  border-color: #426A4F !important;
+}
+
+body.dark-mode .book-details h3,
+body.dark-mode .book-details h4,
+body.dark-mode .book-share h4 {
+  color: #A1E8B8;
+}
+
+body.dark-mode .book-details p {
+  color: #C5DCCB;
+}
+
+body.dark-mode footer {
+  background: #0B1710;
+  color: #B4C8BA;
+  border-color: #355541;
+}
+
+/* زر تبديل الوضع */
+
+.theme-toggle {
+  background: #D7F0DF;
+  color: #104F32;
+  border: 1px solid #A5D3B2;
+  border-radius: 12px;
+  padding: 9px 15px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+body.dark-mode .theme-toggle {
+  background: #294735;
+  color: #D7F0DF;
+  border-color: #426A4F;
+}
+
+.theme-toggle:active {
+  transform: scale(0.96);
+}
