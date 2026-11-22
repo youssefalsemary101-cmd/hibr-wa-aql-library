@@ -37,10 +37,13 @@ label{display:block;font-weight:bold;margin-top:5px}
     <form id="login-form">
       <label>البريد الإلكتروني</label>
       <input type="email" id="email" required autocomplete="username" placeholder="البريد الإلكتروني للمدير">
+
       <label>كلمة المرور</label>
       <input type="password" id="password" required autocomplete="current-password" placeholder="كلمة المرور">
+
       <button type="submit" id="login-button">تسجيل الدخول</button>
     </form>
+
     <button type="button" id="forgot-button" class="link-button">نسيت كلمة المرور؟</button>
     <div id="login-message" class="message hidden"></div>
   </div>
@@ -48,13 +51,17 @@ label{display:block;font-weight:bold;margin-top:5px}
   <div id="reset-panel" class="panel hidden">
     <h1>إعادة تعيين كلمة المرور</h1>
     <p>اكتب كلمة المرور الجديدة لحساب المدير.</p>
+
     <form id="reset-form">
       <label>كلمة المرور الجديدة</label>
       <input type="password" id="new-password" minlength="8" required autocomplete="new-password" placeholder="8 أحرف على الأقل">
+
       <label>تأكيد كلمة المرور</label>
       <input type="password" id="confirm-password" minlength="8" required autocomplete="new-password" placeholder="أعد كتابة كلمة المرور">
+
       <button type="submit" id="reset-button">حفظ كلمة المرور الجديدة</button>
     </form>
+
     <div id="reset-message" class="message hidden"></div>
   </div>
 
@@ -67,26 +74,31 @@ label{display:block;font-weight:bold;margin-top:5px}
 
     <div class="panel">
       <h2 id="form-title">إضافة كتاب جديد</h2>
+
       <form id="book-form">
         <label>اسم الكتاب</label>
         <input id="title" required placeholder="اسم الكتاب">
 
         <label>المرحلة الدراسية</label>
         <select id="stage" required>
-          <option value="primary">المرحلة الابتدائية</option>
-          <option value="preparatory">المرحلة الإعدادية</option>
-          <option value="secondary">الثانوية العامة</option>
-          <option value="baccalaureate">البكالوريا</option>
+          <option value="">اختر المرحلة الدراسية</option>
         </select>
 
         <label>الصف الدراسي</label>
-        <input id="grade" required placeholder="مثال: 1 أو 2 أو 3">
+        <select id="grade" required disabled>
+          <option value="">اختر الصف الدراسي</option>
+        </select>
 
-        <label>الشعبة أو المسار (اختياري)</label>
-        <input id="option" placeholder="اتركه فارغًا إن لم يوجد">
+        <label>الشعبة أو المسار</label>
+        <select id="option" disabled>
+          <option value="">بدون شعبة أو مسار</option>
+        </select>
+        <p class="small">ستظهر الشعب والمسارات تلقائيًا إذا كان الصف يحتوي عليها.</p>
 
         <label>المادة</label>
-        <input id="subject" required placeholder="اسم المادة">
+        <select id="subject" required disabled>
+          <option value="">اختر المادة</option>
+        </select>
 
         <label>الفصل الدراسي</label>
         <select id="term" required>
@@ -114,6 +126,7 @@ label{display:block;font-weight:bold;margin-top:5px}
         <button type="submit" id="save-button">حفظ الكتاب</button>
         <button type="button" id="cancel-edit" class="secondary hidden">إلغاء التعديل</button>
       </form>
+
       <div id="form-message" class="message hidden"></div>
     </div>
 
@@ -124,6 +137,10 @@ label{display:block;font-weight:bold;margin-top:5px}
   </div>
 </div>
 
+<!-- تحميل المنهج الدراسي -->
+<script src="curriculum.js"></script>
+
+<!-- تحميل Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js?v=1"></script>
 
@@ -135,16 +152,22 @@ document.addEventListener("DOMContentLoaded", function () {
   const loginPanel = document.getElementById("login-panel");
   const resetPanel = document.getElementById("reset-panel");
   const adminPanel = document.getElementById("admin-panel");
+
   const loginMessage = document.getElementById("login-message");
   const resetMessage = document.getElementById("reset-message");
   const formMessage = document.getElementById("form-message");
+
   const booksList = document.getElementById("books-list");
   const bookForm = document.getElementById("book-form");
   const saveButton = document.getElementById("save-button");
 
+  const stageSelect = document.getElementById("stage");
+  const gradeSelect = document.getElementById("grade");
+  const optionSelect = document.getElementById("option");
+  const subjectSelect = document.getElementById("subject");
+
   let editingId = null;
   let currentBooks = [];
-  let recoveryMode = false;
 
   function message(element, text) {
     element.textContent = text;
@@ -162,7 +185,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function showReset() {
-    recoveryMode = true;
     loginPanel.classList.add("hidden");
     adminPanel.classList.add("hidden");
     resetPanel.classList.remove("hidden");
@@ -176,8 +198,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
-      "&":"&amp;", "<":"&lt;", ">":"&gt;",
-      '"':"&quot;", "'":"&#039;"
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
     })[char]);
   }
 
@@ -190,13 +215,200 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  if (!client) {
+  // التأكد من وجود المنهج
+  if (typeof curriculum === "undefined") {
     showLogin();
-    message(loginMessage, "تعذر الاتصال بإعدادات Supabase. راجع ملف supabase-client.js.");
+    message(
+      loginMessage,
+      "تعذر تحميل المنهج الدراسي. تأكد من وجود ملف curriculum.js بجانب admin.html."
+    );
     return;
   }
 
-  const redirectURL = "https://youssefalsemary101-cmd.github.io/hibr-wa-aql-library/admin.html";
+  if (!client) {
+    showLogin();
+    message(
+      loginMessage,
+      "تعذر الاتصال بإعدادات Supabase. راجع ملف supabase-client.js."
+    );
+    return;
+  }
+
+  const redirectURL =
+    "https://youssefalsemary101-cmd.github.io/hibr-wa-aql-library/admin.html";
+
+  // إنشاء اختيار داخل قائمة
+  function addOption(select, value, text) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = text;
+    select.appendChild(option);
+  }
+
+  // إعادة ضبط قائمة
+  function resetSelect(select, placeholder) {
+    select.innerHTML = "";
+    addOption(select, "", placeholder);
+    select.value = "";
+  }
+
+  // تحميل المراحل الدراسية من curriculum.js
+  function populateStages() {
+    resetSelect(stageSelect, "اختر المرحلة الدراسية");
+
+    Object.entries(curriculum).forEach(([key, stage]) => {
+      addOption(stageSelect, key, stage.name || key);
+    });
+
+    populateGrades();
+  }
+
+  // تحميل الصفوف حسب المرحلة
+  function populateGrades(selectedGrade = "") {
+    resetSelect(gradeSelect, "اختر الصف الدراسي");
+    resetSelect(optionSelect, "بدون شعبة أو مسار");
+    resetSelect(subjectSelect, "اختر المادة");
+
+    gradeSelect.disabled = true;
+    optionSelect.disabled = true;
+    subjectSelect.disabled = true;
+
+    const stage = curriculum[stageSelect.value];
+    if (!stage || !stage.grades) return;
+
+    Object.keys(stage.grades).forEach(grade => {
+      addOption(gradeSelect, grade, "الصف " + grade);
+    });
+
+    gradeSelect.disabled = false;
+
+    if (selectedGrade !== "") {
+      gradeSelect.value = String(selectedGrade);
+      populateOptions();
+    }
+  }
+
+  // تحميل الشعب أو المسارات حسب الصف
+  function populateOptions(selectedOption = "") {
+    resetSelect(optionSelect, "بدون شعبة أو مسار");
+    resetSelect(subjectSelect, "اختر المادة");
+
+    optionSelect.disabled = true;
+    subjectSelect.disabled = true;
+
+    const stage = curriculum[stageSelect.value];
+    if (!stage || !stage.grades) return;
+
+    const gradeData = stage.grades[gradeSelect.value];
+    if (!gradeData) return;
+
+    // الصف الذي يحتوي على مصفوفة مواد مباشرة
+    if (Array.isArray(gradeData)) {
+      optionSelect.disabled = true;
+      optionSelect.value = "";
+      populateSubjects();
+      return;
+    }
+
+    // الصف الذي يحتوي على شعب أو مسارات
+    if (typeof gradeData === "object") {
+      Object.keys(gradeData).forEach(optionName => {
+        addOption(optionSelect, optionName, optionName);
+      });
+
+      optionSelect.disabled = false;
+
+      if (selectedOption && Object.prototype.hasOwnProperty.call(gradeData, selectedOption)) {
+        optionSelect.value = selectedOption;
+        populateSubjects();
+      }
+    }
+  }
+
+  // تحميل المواد حسب الصف والشعبة
+  function populateSubjects(selectedSubject = "") {
+    resetSelect(subjectSelect, "اختر المادة");
+    subjectSelect.disabled = true;
+
+    const stage = curriculum[stageSelect.value];
+    if (!stage || !stage.grades) return;
+
+    const gradeData = stage.grades[gradeSelect.value];
+    if (!gradeData) return;
+
+    let subjects = [];
+
+    if (Array.isArray(gradeData)) {
+      subjects = gradeData;
+    } else if (
+      typeof gradeData === "object" &&
+      optionSelect.value &&
+      Array.isArray(gradeData[optionSelect.value])
+    ) {
+      subjects = gradeData[optionSelect.value];
+    }
+
+    subjects.forEach(subject => {
+      addOption(subjectSelect, subject, subject);
+    });
+
+    subjectSelect.disabled = subjects.length === 0;
+
+    if (selectedSubject && subjects.includes(selectedSubject)) {
+      subjectSelect.value = selectedSubject;
+    }
+  }
+
+  // التحقق من صحة التصنيف قبل الحفظ
+  function validateClassification() {
+    const stage = curriculum[stageSelect.value];
+
+    if (!stage) {
+      throw new Error("اختر مرحلة دراسية صحيحة.");
+    }
+
+    const gradeData = stage.grades[gradeSelect.value];
+
+    if (!gradeData) {
+      throw new Error("اختر صفًا دراسيًا صحيحًا.");
+    }
+
+    let subjects = [];
+
+    if (Array.isArray(gradeData)) {
+      subjects = gradeData;
+
+      if (optionSelect.value !== "") {
+        throw new Error("هذا الصف لا يحتوي على شعبة أو مسار.");
+      }
+    } else {
+      if (!optionSelect.value || !Array.isArray(gradeData[optionSelect.value])) {
+        throw new Error("اختر الشعبة أو المسار الصحيح.");
+      }
+
+      subjects = gradeData[optionSelect.value];
+    }
+
+    if (!subjects.includes(subjectSelect.value)) {
+      throw new Error("اختر مادة صحيحة من القائمة.");
+    }
+  }
+
+  // أحداث القوائم المترابطة
+  stageSelect.addEventListener("change", function () {
+    populateGrades();
+  });
+
+  gradeSelect.addEventListener("change", function () {
+    populateOptions();
+  });
+
+  optionSelect.addEventListener("change", function () {
+    populateSubjects();
+  });
+
+  // تجهيز القوائم عند فتح الصفحة
+  populateStages();
 
   client.auth.onAuthStateChange(function (event, session) {
     if (event === "PASSWORD_RECOVERY") {
@@ -223,12 +435,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       showAdmin();
       await loadBooks();
+
     } catch (error) {
       showLogin();
       message(loginMessage, "خطأ في التحقق من الجلسة: " + error.message);
     }
   }
 
+  // تسجيل الدخول
   document.getElementById("login-form").addEventListener("submit", async function (event) {
     event.preventDefault();
     hideMessage(loginMessage);
@@ -241,7 +455,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (error) {
         message(loginMessage, "خطأ تسجيل الدخول: " + error.message);
@@ -256,14 +473,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
       showAdmin();
       await loadBooks();
+
     } catch (error) {
       message(loginMessage, "حدث خطأ: " + error.message);
+
     } finally {
       button.disabled = false;
       button.textContent = "تسجيل الدخول";
     }
   });
 
+  // استعادة كلمة المرور
   document.getElementById("forgot-button").addEventListener("click", async function () {
     hideMessage(loginMessage);
 
@@ -286,15 +506,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (error) throw error;
 
-      message(loginMessage, "إذا كان البريد مسجلًا، فسيصلك رابط استعادة كلمة المرور. افحص صندوق الوارد والرسائل غير المرغوب فيها.");
+      message(
+        loginMessage,
+        "إذا كان البريد مسجلًا، فسيصلك رابط استعادة كلمة المرور. افحص صندوق الوارد والرسائل غير المرغوب فيها."
+      );
+
     } catch (error) {
       message(loginMessage, "تعذر إرسال رابط الاستعادة: " + error.message);
+
     } finally {
       button.disabled = false;
       button.textContent = "نسيت كلمة المرور؟";
     }
   });
 
+  // حفظ كلمة المرور الجديدة
   document.getElementById("reset-form").addEventListener("submit", async function (event) {
     event.preventDefault();
     hideMessage(resetMessage);
@@ -317,7 +543,9 @@ document.addEventListener("DOMContentLoaded", function () {
     button.textContent = "جاري الحفظ...";
 
     try {
-      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      const { data: sessionData, error: sessionError } =
+        await client.auth.getSession();
+
       if (sessionError) throw sessionError;
 
       if (!sessionData.session || sessionData.session.user.id !== ADMIN_UID) {
@@ -327,19 +555,26 @@ document.addEventListener("DOMContentLoaded", function () {
       const { error } = await client.auth.updateUser({ password });
       if (error) throw error;
 
-      recoveryMode = false;
       await client.auth.signOut();
+
       document.getElementById("reset-form").reset();
       showLogin();
-      message(loginMessage, "تم تغيير كلمة المرور بنجاح. سجل الدخول باستخدام كلمة المرور الجديدة.");
+
+      message(
+        loginMessage,
+        "تم تغيير كلمة المرور بنجاح. سجل الدخول باستخدام كلمة المرور الجديدة."
+      );
+
     } catch (error) {
       message(resetMessage, "تعذر تغيير كلمة المرور: " + error.message);
+
     } finally {
       button.disabled = false;
       button.textContent = "حفظ كلمة المرور الجديدة";
     }
   });
 
+  // تحميل الكتب
   async function loadBooks() {
     booksList.textContent = "جاري تحميل الكتب...";
 
@@ -357,6 +592,7 @@ document.addEventListener("DOMContentLoaded", function () {
     renderBooks();
   }
 
+  // عرض الكتب
   function renderBooks() {
     if (!currentBooks.length) {
       booksList.textContent = "لا توجد كتب مضافة حتى الآن.";
@@ -367,7 +603,12 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="book">
         <h3>${escapeHTML(book.title)}</h3>
         <p>${escapeHTML(book.subject)} — الصف ${escapeHTML(book.grade)}</p>
-        <p class="small">${escapeHTML(book.stage)} | ${escapeHTML(book.term)}</p>
+        <p class="small">
+          ${escapeHTML(book.stage)} |
+          ${escapeHTML(book.option || "بدون شعبة")} |
+          ${escapeHTML(book.term)}
+        </p>
+
         <div class="book-actions">
           <button type="button" data-edit="${escapeHTML(book.id)}">تعديل</button>
           <button type="button" class="danger" data-delete="${escapeHTML(book.id)}">حذف</button>
@@ -377,40 +618,68 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   booksList.addEventListener("click", async function (event) {
-    const editId = event.target.dataset.edit;
-    const deleteId = event.target.dataset.delete;
+    const button = event.target.closest("button");
+    if (!button) return;
+
+    const editId = button.dataset.edit;
+    const deleteId = button.dataset.delete;
+
     if (editId) startEdit(editId);
     if (deleteId) await deleteBook(deleteId);
   });
 
+  // تعديل كتاب موجود
   function startEdit(id) {
     const book = currentBooks.find(item => item.id === id);
     if (!book) return;
 
     editingId = id;
+
     document.getElementById("title").value = book.title || "";
-    document.getElementById("stage").value = book.stage || "primary";
-    document.getElementById("grade").value = book.grade || "";
-    document.getElementById("option").value = book.option || "";
-    document.getElementById("subject").value = book.subject || "";
+
+    stageSelect.value = book.stage || "";
+    populateGrades(book.grade || "");
+
+    const stage = curriculum[stageSelect.value];
+    const gradeData = stage?.grades?.[gradeSelect.value];
+
+    if (gradeData && !Array.isArray(gradeData)) {
+      populateOptions(book.option || "");
+    } else {
+      populateSubjects();
+    }
+
+    // إذا كانت قيمة الكتاب القديمة غير موجودة في المنهج،
+    // سيُطلب اختيار التصنيف الصحيح من القوائم.
     document.getElementById("term").value = book.term || "term1";
     document.getElementById("academic-year").value = book.academic_year || "";
     document.getElementById("file-size").value = book.file_size || "";
     document.getElementById("description").value = book.description || "";
     document.getElementById("book-url").value = book.book_url || "";
 
+    if (book.subject) {
+      subjectSelect.value = book.subject;
+    }
+
     document.getElementById("form-title").textContent = "تعديل الكتاب";
     saveButton.textContent = "حفظ التعديلات";
+
     document.getElementById("cancel-edit").classList.remove("hidden");
     hideMessage(formMessage);
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // إعادة ضبط النموذج
   function resetForm() {
     editingId = null;
     bookForm.reset();
+
+    populateStages();
+
     document.getElementById("form-title").textContent = "إضافة كتاب جديد";
     saveButton.textContent = "حفظ الكتاب";
+
     document.getElementById("cancel-edit").classList.add("hidden");
   }
 
@@ -419,13 +688,22 @@ document.addEventListener("DOMContentLoaded", function () {
     hideMessage(formMessage);
   });
 
+  // إضافة كتاب أو تحديثه
   bookForm.addEventListener("submit", async function (event) {
     event.preventDefault();
     hideMessage(formMessage);
 
     const bookURL = document.getElementById("book-url").value.trim();
+
     if (!validBookURL(bookURL)) {
       message(formMessage, "اكتب رابطًا صحيحًا يبدأ بـ https:// أو http://");
+      return;
+    }
+
+    try {
+      validateClassification();
+    } catch (error) {
+      message(formMessage, error.message);
       return;
     }
 
@@ -444,12 +722,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!["image/jpeg", "image/png", "image/webp"].includes(coverFile.type)) {
           throw new Error("نوع صورة الغلاف غير مدعوم.");
         }
+
         if (coverFile.size > 5 * 1024 * 1024) {
           throw new Error("حجم صورة الغلاف يجب ألا يتجاوز 5 ميجابايت.");
         }
 
-        const extension = coverFile.type === "image/png" ? "png"
-          : coverFile.type === "image/webp" ? "webp" : "jpg";
+        const extension =
+          coverFile.type === "image/png" ? "png" :
+          coverFile.type === "image/webp" ? "webp" : "jpg";
+
         const newPath = crypto.randomUUID() + "." + extension;
 
         const { error: uploadError } = await client.storage
@@ -460,21 +741,27 @@ document.addEventListener("DOMContentLoaded", function () {
           });
 
         if (uploadError) throw uploadError;
+
         coverPath = newPath;
       }
 
       const bookData = {
         title: document.getElementById("title").value.trim(),
-        stage: document.getElementById("stage").value,
-        grade: document.getElementById("grade").value.trim(),
-        option: document.getElementById("option").value.trim(),
-        subject: document.getElementById("subject").value.trim(),
+
+        stage: stageSelect.value,
+        grade: gradeSelect.value,
+        option: optionSelect.value || "",
+        subject: subjectSelect.value,
+
         term: document.getElementById("term").value,
+
         academic_year: document.getElementById("academic-year").value.trim(),
         file_size: document.getElementById("file-size").value.trim(),
         description: document.getElementById("description").value.trim(),
+
         cover_path: coverPath,
         book_url: bookURL,
+
         updated_at: new Date().toISOString()
       };
 
@@ -485,23 +772,40 @@ document.addEventListener("DOMContentLoaded", function () {
       if (result.error) throw result.error;
 
       const wasEditing = Boolean(editingId);
+
       resetForm();
-      message(formMessage, wasEditing ? "تم تحديث الكتاب بنجاح." : "تمت إضافة الكتاب بنجاح.");
+
+      message(
+        formMessage,
+        wasEditing
+          ? "تم تحديث الكتاب بنجاح."
+          : "تمت إضافة الكتاب بنجاح."
+      );
+
       await loadBooks();
 
     } catch (error) {
       message(formMessage, "تعذر حفظ الكتاب: " + error.message);
+
     } finally {
       saveButton.disabled = false;
-      if (!editingId) saveButton.textContent = "حفظ الكتاب";
+
+      if (!editingId) {
+        saveButton.textContent = "حفظ الكتاب";
+      }
     }
   });
 
+  // حذف كتاب
   async function deleteBook(id) {
     const book = currentBooks.find(item => item.id === id);
+
     if (!book || !confirm("هل أنت متأكد من حذف هذا الكتاب؟")) return;
 
-    const { error } = await client.from("books").delete().eq("id", id);
+    const { error } = await client
+      .from("books")
+      .delete()
+      .eq("id", id);
 
     if (error) {
       alert("تعذر حذف الكتاب: " + error.message);
@@ -510,15 +814,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (book.cover_path) {
       const { error: storageError } = await client.storage
-        .from("book-covers").remove([book.cover_path]);
+        .from("book-covers")
+        .remove([book.cover_path]);
 
-      if (storageError) console.error("تعذر حذف صورة الغلاف:", storageError.message);
+      if (storageError) {
+        console.error("تعذر حذف صورة الغلاف:", storageError.message);
+      }
     }
 
     await loadBooks();
     alert("تم حذف الكتاب بنجاح.");
   }
 
+  // تسجيل الخروج
   document.getElementById("logout-button").addEventListener("click", async function () {
     await client.auth.signOut();
     resetForm();
