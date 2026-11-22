@@ -1,12 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#248B52">
-
-  <title>حبر وعقل</title>
-
+  <title>حبر وعقل | المكتبة التعليمية</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,30 +13,122 @@
 
   <header>
     <div class="container header-content">
-      <div class="logo">حبر وعقل</div>
+      <a href="index.html" class="logo">حبر وعقل</a>
+
+      <nav class="nav-links">
+        <a href="#home">الرئيسية</a>
+        <a href="#library">المكتبة</a>
+        <a href="#latest">أحدث الكتب</a>
+      </nav>
     </div>
   </header>
 
   <main>
-    <section class="main-section container">
 
-      <h1 class="section-title">حبر وعقل</h1>
+    <!-- الواجهة الرئيسية -->
+    <section class="main-section container" id="home">
+
+      <h1 class="section-title">
+        مكتبتك التعليمية في <span>مكان واحد</span>
+      </h1>
 
       <p class="section-description">
-        مكتبة تعليمية متكاملة، تجمع الكتب الدراسية في مكان واحد
-        لتسهيل الوصول إليها.
+        اكتشف الكتب الدراسية بسهولة، واختر صفك ومادتك للوصول
+        إلى الكتاب الذي تحتاجه.
       </p>
 
-      <button class="primary-button">
+      <a href="#library" class="primary-button">
         تصفح المكتبة
-      </button>
+      </a>
 
     </section>
+
+    <!-- البحث -->
+    <section class="container" id="search-section">
+
+      <h2 class="section-title">ابحث عن كتاب</h2>
+
+      <input
+        type="search"
+        id="book-search"
+        placeholder="ابحث باسم الكتاب أو المادة أو الصف..."
+      >
+
+    </section>
+
+    <!-- المراحل التعليمية -->
+    <section class="main-section container" id="library">
+
+      <h2 class="section-title">المكتبة التعليمية</h2>
+
+      <p class="section-description">
+        اختر المرحلة التعليمية للبدء.
+      </p>
+
+      <div class="stages-grid">
+
+        <div class="card stage-card">
+          <h3>المرحلة الابتدائية</h3>
+          <p>الكتب والمواد الدراسية للمرحلة الابتدائية.</p>
+          <button class="primary-button" data-stage="primary">
+            عرض الصفوف
+          </button>
+        </div>
+
+        <div class="card stage-card">
+          <h3>المرحلة الإعدادية</h3>
+          <p>الكتب والمواد الدراسية للمرحلة الإعدادية.</p>
+          <button class="primary-button" data-stage="preparatory">
+            عرض الصفوف
+          </button>
+        </div>
+
+        <div class="card stage-card">
+          <h3>الثانوية العامة</h3>
+          <p>الكتب والمواد الدراسية للمرحلة الثانوية.</p>
+          <button class="primary-button" data-stage="secondary">
+            عرض الصفوف
+          </button>
+        </div>
+
+        <div class="card stage-card">
+          <h3>البكالوريا</h3>
+          <p>الكتب والمواد الدراسية الخاصة بنظام البكالوريا.</p>
+          <button class="primary-button" data-stage="baccalaureate">
+            عرض الصفوف
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- أحدث الكتب -->
+    <section class="main-section container" id="latest">
+
+      <h2 class="section-title">أحدث الكتب</h2>
+
+      <p class="section-description">
+        سيتم عرض أحدث الكتب المضافة إلى المكتبة هنا.
+      </p>
+
+      <div id="latest-books" class="books-grid">
+
+        <div class="card">
+          <p>سيتم إضافة الكتب قريبًا.</p>
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
   <footer>
     © حبر وعقل - جميع الحقوق محفوظة
   </footer>
+
+  <script src="script.js"></script>
 
 </body>
 </html>
