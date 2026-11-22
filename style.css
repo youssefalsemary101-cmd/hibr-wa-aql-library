@@ -710,3 +710,66 @@ body.dark-mode .theme-toggle {
 .theme-toggle:active {
   transform: scale(0.96);
 }
+
+/* إصلاح تطبيق ألوان الوضع الداكن */
+
+body.dark-mode,
+body.dark-mode main,
+body.dark-mode .main-section {
+  background: #101A16 !important;
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode header {
+  background: #14271D !important;
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode #home {
+  background: linear-gradient(135deg, #142D20, #205438) !important;
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode #wizard,
+body.dark-mode #book-search-area,
+body.dark-mode #latest-books-container {
+  background: #1B2C23 !important;
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode p,
+body.dark-mode label {
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode input,
+body.dark-mode select {
+  background: #203A2A !important;
+  color: #F0F5F1 !important;
+  border-color: #426A4F !important;
+}
+
+body.dark-mode .choice-card,
+body.dark-mode .book-card {
+  background: #203A2A !important;
+  color: #F0F5F1 !important;
+  border-color: #426A4F !important;
+}
+
+body.dark-mode .primary-button {
+  background: #248B52 !important;
+  color: #FFFFFF !important;
+}
+
+body.dark-mode .secondary-button {
+  background: #294735 !important;
+  color: #F0F5F1 !important;
+}
+
+body.dark-mode footer {
+  background: #0B1710 !important;
+  color: #F0F5F1 !important;
+}
