@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  // سجل التنقل للرجوع إلى الصفحة السابقة
+  let navigationHistory = [];
+
+  // الصفحة الحالية
+  let currentPage = null;
+
   // تنظيف الأقسام التي يتم إنشاؤها أثناء التنقل
   function clearDynamicSections() {
     document.querySelectorAll(".dynamic-section").forEach(section => {
@@ -33,17 +39,58 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // الانتقال إلى صفحة جديدة
+  function navigateTo(pageFunction) {
+    if (currentPage) {
+      navigationHistory.push(currentPage);
+    }
+
+    currentPage = pageFunction;
+    pageFunction();
+  }
+
+  // الرجوع للصفحة السابقة
+  function goBack() {
+    if (navigationHistory.length === 0) {
+      clearDynamicSections();
+      currentPage = null;
+      library.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    const previousPage = navigationHistory.pop();
+
+    currentPage = previousPage;
+    previousPage();
+  }
+
+  // إنشاء زر الرجوع
+  function createBackButton() {
+    return `
+      <button class="primary-button back-button" type="button">
+        ← رجوع
+      </button>
+    `;
+  }
+
   // إنشاء قسم جديد
-  function createSection(title, description, content) {
+  function createSection(title, description, content, showBack = true) {
     const section = document.createElement("section");
 
     section.className = "main-section container dynamic-section";
 
     section.innerHTML = `
+      ${showBack ? createBackButton() : ""}
       <h2 class="section-title">${escapeHTML(title)}</h2>
       <p class="section-description">${escapeHTML(description)}</p>
       <div class="stages-grid">${content}</div>
     `;
+
+    if (showBack) {
+      const backButton = section.querySelector(".back-button");
+
+      backButton.addEventListener("click", goBack);
+    }
 
     return section;
   }
@@ -70,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const gradeEntries = Object.entries(stage.grades);
 
-    const gradesHTML = gradeEntries.map(([gradeKey, gradeData]) => {
+    const gradesHTML = gradeEntries.map(([gradeKey]) => {
 
       const gradeName = getGradeName(stageKey, gradeKey);
 
@@ -93,7 +140,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     section.querySelectorAll("[data-grade]").forEach(button => {
       button.addEventListener("click", function () {
-        showGradeContent(stageKey, button.dataset.grade);
+
+        const gradeKey = button.dataset.grade;
+
+        navigateTo(function () {
+          showGradeContent(stageKey, gradeKey);
+        });
+
       });
     });
 
@@ -126,6 +179,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // عرض المواد أو الشعب أو المسارات
   function showGradeContent(stageKey, gradeKey) {
     const stage = curriculum[stageKey];
+
+    if (!stage || !stage.grades[gradeKey]) return;
+
     const gradeData = stage.grades[gradeKey];
     const gradeName = getGradeName(stageKey, gradeKey);
 
@@ -133,7 +189,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // إذا كانت بيانات الصف عبارة عن قائمة مواد
     if (Array.isArray(gradeData)) {
-      showSubjects(stageKey, gradeKey, null, gradeData);
+
+      showSubjects(
+        stageKey,
+        gradeKey,
+        null,
+        gradeData,
+        function () {
+          showGradeContent(stageKey, gradeKey);
+        }
+      );
+
       return;
     }
 
@@ -159,15 +225,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
       section.querySelectorAll("[data-option]").forEach(button => {
         button.addEventListener("click", function () {
+
           const optionName = button.dataset.option;
           const optionData = gradeData[optionName];
 
-          showSubjects(
-            stageKey,
-            gradeKey,
-            optionName,
-            optionData
-          );
+          navigateTo(function () {
+            showSubjects(
+              stageKey,
+              gradeKey,
+              optionName,
+              optionData,
+              function () {
+                showGradeContent(stageKey, gradeKey);
+              }
+            );
+          });
+
         });
       });
 
@@ -176,8 +249,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // عرض المواد
-  function showSubjects(stageKey, gradeKey, optionName, subjectList) {
-    const stage = curriculum[stageKey];
+  function showSubjects(
+    stageKey,
+    gradeKey,
+    optionName,
+    subjectList,
+    backFunction
+  ) {
     const gradeName = getGradeName(stageKey, gradeKey);
 
     clearDynamicSections();
@@ -205,14 +283,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     library.after(section);
 
+    // تحديد صفحة الرجوع
+    section.querySelector(".back-button").addEventListener("click", function () {
+      if (backFunction) {
+        backFunction();
+      }
+    });
+
     section.querySelectorAll("[data-subject]").forEach(button => {
       button.addEventListener("click", function () {
-        showBooks(
-          stageKey,
-          gradeKey,
-          optionName,
-          button.dataset.subject
-        );
+
+        const subjectName = button.dataset.subject;
+
+        navigateTo(function () {
+          showBooks(
+            stageKey,
+            gradeKey,
+            optionName,
+            subjectName
+          );
+        });
+
       });
     });
 
@@ -221,7 +312,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // صفحة الكتب
   function showBooks(stageKey, gradeKey, optionName, subjectName) {
-    const stage = curriculum[stageKey];
     const gradeName = getGradeName(stageKey, gradeKey);
 
     clearDynamicSections();
@@ -250,7 +340,14 @@ document.addEventListener("DOMContentLoaded", function () {
   // أزرار المراحل التعليمية
   document.querySelectorAll("[data-stage]").forEach(button => {
     button.addEventListener("click", function () {
+
+      navigationHistory = [];
+      currentPage = function () {
+        showGrades(button.dataset.stage);
+      };
+
       showGrades(button.dataset.stage);
+
     });
   });
 
