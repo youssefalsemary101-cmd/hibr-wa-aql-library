@@ -5,8 +5,193 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#F5F9F6">
+
   <title>حبر وعقل | المكتبة التعليمية</title>
-  <link rel="stylesheet" href="style.css?v=9">
+
+  <link rel="stylesheet" href="style.css?v=10">
+
+  <style>
+    .menu-toggle {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 1002;
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--border, #dce8df);
+      border-radius: 12px;
+      background: var(--surface, #fff);
+      color: var(--text, #183b2a);
+      font-size: 25px;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+
+    .side-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 280px;
+      max-width: 85vw;
+      height: 100vh;
+      z-index: 1001;
+      padding: 85px 20px 25px;
+      background: var(--surface, #fff);
+      color: var(--text, #183b2a);
+      border-left: 1px solid var(--border, #dce8df);
+      box-shadow: -5px 0 25px rgba(0,0,0,.10);
+      transform: translateX(105%);
+      transition: transform .3s ease;
+      overflow-y: auto;
+    }
+
+    .side-menu.open {
+      transform: translateX(0);
+    }
+
+    .side-menu-title {
+      font-size: 23px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: var(--primary, #248b52);
+    }
+
+    .side-menu-description {
+      font-size: 13px;
+      opacity: .75;
+      margin-bottom: 25px;
+      line-height: 1.8;
+    }
+
+    .side-menu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 600;
+      transition: background .2s ease;
+    }
+
+    .side-menu a:hover {
+      background: var(--surface-soft, #edf5ef);
+    }
+
+    .side-menu .menu-icon {
+      font-size: 20px;
+    }
+
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: .3s ease;
+    }
+
+    .menu-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    #latest-books-container {
+      margin-top: 30px;
+    }
+
+    .latest-heading {
+      margin-bottom: 20px;
+    }
+
+    .latest-books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 18px;
+    }
+
+    .latest-book-card {
+      overflow: hidden;
+      border: 1px solid var(--border, #dce8df);
+      border-radius: 16px;
+      background: var(--surface, #fff);
+      color: var(--text, #183b2a);
+      padding: 14px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    .latest-book-cover {
+      width: 100%;
+      height: 190px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: var(--surface-soft, #edf5ef);
+      margin-bottom: 12px;
+    }
+
+    .latest-book-placeholder {
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-soft, #edf5ef);
+      border-radius: 10px;
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .latest-book-title {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .latest-book-info {
+      font-size: 13px;
+      opacity: .8;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .latest-book-link {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      padding: 11px;
+      border-radius: 10px;
+      background: var(--primary, #248b52);
+      color: white;
+      font-weight: bold;
+    }
+
+    .latest-message {
+      padding: 22px;
+      text-align: center;
+      border-radius: 12px;
+      background: var(--surface, #fff);
+      color: var(--text, #183b2a);
+      line-height: 1.8;
+    }
+
+    .latest-back-button {
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 900px) {
+      .menu-toggle {
+        top: 20px;
+        right: 22px;
+      }
+    }
+  </style>
 
   <script>
     try {
@@ -19,10 +204,61 @@
 
 <body>
 
+  <button
+    type="button"
+    id="menu-toggle"
+    class="menu-toggle"
+    aria-label="فتح القائمة الجانبية"
+    aria-expanded="false"
+  >
+    ☰
+  </button>
+
+  <div id="menu-overlay" class="menu-overlay"></div>
+
+  <aside id="side-menu" class="side-menu" aria-label="القائمة الرئيسية">
+
+    <div class="side-menu-title">حبر وعقل 📚</div>
+
+    <p class="side-menu-description">
+      مكتبتك التعليمية في مكان واحد.
+    </p>
+
+    <a href="./" id="menu-home">
+      <span class="menu-icon">🏠</span>
+      الرئيسية
+    </a>
+
+    <a href="#library" id="menu-library">
+      <span class="menu-icon">📚</span>
+      تصفح الكتب
+    </a>
+
+    <a href="#latest-books-container" id="menu-latest">
+      <span class="menu-icon">⭐</span>
+      أحدث الكتب
+    </a>
+
+    <a href="#about-library" id="menu-about">
+      <span class="menu-icon">ℹ️</span>
+      عن المكتبة
+    </a>
+
+    <a href="#contact-library" id="menu-contact">
+      <span class="menu-icon">✉️</span>
+      تواصل معنا
+    </a>
+
+    <a href="admin.html">
+      <span class="menu-icon">⚙️</span>
+      لوحة الإدارة
+    </a>
+
+  </aside>
+
   <header>
     <div class="container header-content">
-
-      <a href="index.html" class="logo">حبر وعقل</a>
+      <a href="./" class="logo">حبر وعقل</a>
 
       <button
         type="button"
@@ -33,15 +269,12 @@
       >
         🌙
       </button>
-
     </div>
   </header>
 
   <main>
 
-    <!-- الشاشة الرئيسية -->
     <section id="home" class="container main-section">
-
       <div class="home-content">
 
         <div class="home-icon">📚</div>
@@ -64,32 +297,26 @@
         </a>
 
       </div>
-
     </section>
 
-    <!-- المكتبة التعليمية -->
     <section class="main-section container" id="library" hidden>
 
       <div id="wizard">
 
         <div class="wizard-progress">
-
           <p id="step-counter">الخطوة 1</p>
 
           <div class="progress-track">
             <div id="progress-fill"></div>
           </div>
-
         </div>
 
         <div id="wizard-content">
-
           <h1 class="section-title">اختر المرحلة الدراسية</h1>
 
           <p class="section-description">
             حدد المرحلة التعليمية للبدء.
           </p>
-
         </div>
 
         <div class="wizard-controls">
@@ -113,10 +340,8 @@
           </button>
 
         </div>
-
       </div>
 
-      <!-- البحث عن الكتب -->
       <div id="book-search-area" hidden>
 
         <h2 class="section-title">ابحث عن كتاب</h2>
@@ -131,8 +356,53 @@
 
       </div>
 
-      <div id="latest-books-container" hidden></div>
+      <!-- أحدث الكتب -->
+      <div id="latest-books-container" hidden>
 
+        <button
+          type="button"
+          id="latest-back-button"
+          class="secondary-button latest-back-button"
+        >
+          العودة لتصفح الكتب
+        </button>
+
+        <div class="latest-heading">
+          <h2 class="section-title">أحدث الكتب ⭐</h2>
+          <p class="section-description">
+            أحدث الكتب التي تمت إضافتها إلى المكتبة.
+          </p>
+        </div>
+
+        <div id="latest-books-results" class="latest-books-grid"></div>
+
+      </div>
+
+    </section>
+
+    <section
+      id="about-library"
+      class="container main-section"
+      style="padding:25px 20px;"
+    >
+      <h2 class="section-title">عن حبر وعقل</h2>
+
+      <p class="section-description">
+        مكتبة تعليمية تهدف إلى جمع الكتب الدراسية وتنظيمها
+        لتسهيل الوصول إليها.
+      </p>
+    </section>
+
+    <section
+      id="contact-library"
+      class="container main-section"
+      style="padding:25px 20px;"
+    >
+      <h2 class="section-title">تواصل معنا</h2>
+
+      <p class="section-description">
+        حبر وعقل - المكتبة التعليمية.
+      </p>
     </section>
 
   </main>
@@ -141,7 +411,6 @@
     © حبر وعقل - جميع الحقوق محفوظة
   </footer>
 
-  <!-- ملفات الموقع -->
   <script src="curriculum.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -152,31 +421,226 @@
 
   <script src="script.js?v=4"></script>
 
-  <!-- الشاشة الرئيسية -->
+  <!-- التنقل والقائمة الجانبية وأحدث الكتب -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-      const browseButton = document.getElementById("browse-books");
       const home = document.getElementById("home");
       const library = document.getElementById("library");
+      const wizard = document.getElementById("wizard");
+      const searchArea = document.getElementById("book-search-area");
+      const latestContainer = document.getElementById("latest-books-container");
+      const latestResults = document.getElementById("latest-books-results");
 
-      if (browseButton && home && library) {
+      const menu = document.getElementById("side-menu");
+      const menuToggle = document.getElementById("menu-toggle");
+      const overlay = document.getElementById("menu-overlay");
 
-        browseButton.addEventListener("click", function (event) {
+      function closeMenu() {
+        menu.classList.remove("open");
+        overlay.classList.remove("show");
+        document.body.classList.remove("menu-open");
 
-          event.preventDefault();
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.textContent = "☰";
+      }
 
-          home.hidden = true;
-          library.hidden = false;
+      function openMenu() {
+        menu.classList.add("open");
+        overlay.classList.add("show");
+        document.body.classList.add("menu-open");
 
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-          });
+        menuToggle.setAttribute("aria-expanded", "true");
+        menuToggle.textContent = "✕";
+      }
 
+      function showWizard() {
+        home.hidden = true;
+        library.hidden = false;
+
+        wizard.hidden = false;
+        searchArea.hidden = true;
+        latestContainer.hidden = true;
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+      function showHome() {
+        library.hidden = true;
+        home.hidden = false;
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+
+      function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (char) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+          }[char];
+        });
+      }
+
+      function getCoverURL(coverPath) {
+        if (!coverPath || !window.supabaseClient) return "";
+
+        const { data } = window.supabaseClient
+          .storage
+          .from("book-covers")
+          .getPublicUrl(coverPath);
+
+        return data?.publicUrl || "";
+      }
+
+      function createLatestBookCard(book) {
+        const title = escapeHTML(book.title);
+        const stage = escapeHTML(book.stage);
+        const grade = escapeHTML(book.grade);
+        const subject = escapeHTML(book.subject);
+        const term = escapeHTML(book.term);
+
+        const coverURL = getCoverURL(book.cover_path);
+
+        const bookURL = new URL("book.html", window.location.href);
+        bookURL.searchParams.set("id", book.id);
+
+        const coverHTML = coverURL
+          ? `<img class="latest-book-cover" src="${escapeHTML(coverURL)}" alt="${title}" loading="lazy">`
+          : `<div class="latest-book-placeholder">📘</div>`;
+
+        return `
+          <article class="latest-book-card">
+            ${coverHTML}
+
+            <h3 class="latest-book-title">${title}</h3>
+
+            <p class="latest-book-info">
+              ${stage} - الصف ${grade}<br>
+              المادة: ${subject}<br>
+              الفصل: ${term}
+            </p>
+
+            <a
+              class="latest-book-link"
+              href="${escapeHTML(bookURL.href)}"
+            >
+              فتح صفحة الكتاب
+            </a>
+          </article>
+        `;
+      }
+
+      async function loadLatestBooks() {
+        latestResults.innerHTML =
+          '<p class="latest-message">جاري تحميل أحدث الكتب...</p>';
+
+        if (!window.supabaseClient) {
+          latestResults.innerHTML =
+            '<p class="latest-message">تعذر الاتصال بالمكتبة حاليًا. حاول مرة أخرى.</p>';
+          return;
+        }
+
+        const { data, error } = await window.supabaseClient
+          .from("books")
+          .select("id, title, stage, grade, subject, term, cover_path, created_at")
+          .order("created_at", { ascending: false })
+          .limit(8);
+
+        if (error) {
+          console.error("خطأ تحميل أحدث الكتب:", error);
+
+          latestResults.innerHTML =
+            '<p class="latest-message">حدث خطأ أثناء تحميل الكتب. حاول مرة أخرى لاحقًا.</p>';
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          latestResults.innerHTML =
+            '<p class="latest-message">لا توجد كتب مضافة حتى الآن.</p>';
+          return;
+        }
+
+        latestResults.innerHTML = data
+          .map(createLatestBookCard)
+          .join("");
+      }
+
+      async function showLatestBooks() {
+        home.hidden = true;
+        library.hidden = false;
+
+        wizard.hidden = true;
+        searchArea.hidden = true;
+        latestContainer.hidden = false;
+
+        closeMenu();
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
         });
 
+        await loadLatestBooks();
       }
+
+      document.getElementById("browse-books")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          showWizard();
+        });
+
+      document.getElementById("menu-library")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          showWizard();
+          closeMenu();
+        });
+
+      document.getElementById("menu-home")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          showHome();
+          closeMenu();
+        });
+
+      document.getElementById("menu-latest")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          showLatestBooks();
+        });
+
+      document.getElementById("latest-back-button")
+        .addEventListener("click", showWizard);
+
+      document.querySelectorAll("#menu-about, #menu-contact")
+        .forEach(function (link) {
+          link.addEventListener("click", closeMenu);
+        });
+
+      menuToggle.addEventListener("click", function () {
+        if (menu.classList.contains("open")) {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      });
+
+      overlay.addEventListener("click", closeMenu);
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeMenu();
+        }
+      });
 
     });
   </script>
@@ -214,7 +678,6 @@
             "content",
             theme === "dark" ? "#101A16" : "#F5F9F6"
           );
-
       }
 
       let savedTheme = "light";
@@ -237,7 +700,6 @@
         } catch (error) {}
 
         applyTheme(nextTheme);
-
       });
 
     });
