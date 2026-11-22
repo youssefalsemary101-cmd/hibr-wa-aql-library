@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الكتب | حبر وعقل</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f3f7f4;
+      color: #20352a;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 25px auto;
+    }
+
+    .panel {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 5px 25px #0000000d;
+      margin-bottom: 20px;
+    }
+
+    h1, h2 {
+      color: #248b52;
+      margin-top: 0;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 13px;
+      margin: 7px 0 14px;
+      border: 1px solid #dce7df;
+      border-radius: 9px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      background: #248b52;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: .9;
+    }
+
+    .secondary {
+      background: #52665a;
+    }
+
+    .danger {
+      background: #c0392b;
+    }
+
+    .book {
+      border: 1px solid #e0e9e3;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 12px 0;
+    }
+
+    .book h3 {
+      margin: 0 0 8px;
+    }
+
+    .book-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .book-actions button {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      background: #eef7f0;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    .small {
+      color: #718078;
+      font-size: 13px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="login-panel" class="panel">
+    <h1>حبر وعقل</h1>
+    <h2>دخول المدير</h2>
+
+    <form id="login-form">
+      <label>البريد الإلكتروني</label>
+      <input
+        type="email"
+        id="email"
+        required
+        autocomplete="username"
+        placeholder="البريد الإلكتروني للمدير">
+
+      <label>كلمة المرور</label>
+      <input
+        type="password"
+        id="password"
+        required
+        autocomplete="current-password"
+        placeholder="كلمة المرور">
+
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+
+    <div id="login-message" class="message hidden"></div>
+  </div>
+
+  <div id="admin-panel" class="hidden">
+
+    <div class="panel">
+      <h1>لوحة إدارة الكتب</h1>
+      <p class="small">إضافة الكتب وتعديلها وحذفها من مكتبة حبر وعقل.</p>
+      <button id="logout-button" class="secondary">
+        تسجيل الخروج
+      </button>
+    </div>
+
+    <div class="panel">
+      <h2 id="form-title">إضافة كتاب جديد</h2>
+
+      <form id="book-form">
+
+        <label>اسم الكتاب</label>
+        <input id="title" required placeholder="اسم الكتاب">
+
+        <label>المرحلة الدراسية</label>
+        <select id="stage" required>
+          <option value="primary">المرحلة الابتدائية</option>
+          <option value="preparatory">المرحلة الإعدادية</option>
+          <option value="secondary">الثانوية العامة</option>
+          <option value="baccalaureate">البكالوريا</option>
+        </select>
+
+        <label>الصف الدراسي</label>
+        <input id="grade" required placeholder="مثال: 1 أو 2 أو 3">
+
+        <label>الشعبة أو المسار (اختياري)</label>
+        <input id="option" placeholder="اتركه فارغًا إن لم يوجد">
+
+        <label>المادة</label>
+        <input id="subject" required placeholder="اسم المادة">
+
+        <label>الفصل الدراسي</label>
+        <select id="term" required>
+          <option value="term1">الفصل الدراسي الأول</option>
+          <option value="term2">الفصل الدراسي الثاني</option>
+          <option value="full">الكتاب كاملًا</option>
+        </select>
+
+        <label>السنة الدراسية (اختياري)</label>
+        <input id="academic-year" placeholder="مثال: 2026-2027">
+
+        <label>حجم الكتاب (اختياري)</label>
+        <input id="file-size" placeholder="مثال: 15 MB">
+
+        <label>وصف الكتاب (اختياري)</label>
+        <textarea id="description" placeholder="وصف مختصر للكتاب"></textarea>
+
+        <label>رابط فتح الكتاب</label>
+        <input
+          type="url"
+          id="book-url"
+          required
+          placeholder="https://...">
+
+        <label>صورة الغلاف (اختياري)</label>
+        <input
+          type="file"
+          id="cover"
+          accept="image/jpeg,image/png,image/webp">
+
+        <p class="small">
+          يمكنك ترك صورة الغلاف فارغة عند تعديل كتاب للاحتفاظ بالغلاف الحالي.
+        </p>
+
+        <button type="submit" id="save-button">
+          حفظ الكتاب
+        </button>
+
+        <button
+          type="button"
+          id="cancel-edit"
+          class="secondary hidden">
+          إلغاء التعديل
+        </button>
+
+      </form>
+
+      <div id="form-message" class="message hidden"></div>
+    </div>
+
+    <div class="panel">
+      <h2>الكتب الموجودة</h2>
+      <div id="books-list">جاري تحميل الكتب...</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+  const ADMIN_UID = "cd13790b-250c-4735-83ac-f3ea2a630720";
+
+  const client = window.supabaseClient;
+
+  const loginPanel = document.getElementById("login-panel");
+  const adminPanel = document.getElementById("admin-panel");
+  const loginMessage = document.getElementById("login-message");
+  const formMessage = document.getElementById("form-message");
+  const booksList = document.getElementById("books-list");
+
+  const bookForm = document.getElementById("book-form");
+  const saveButton = document.getElementById("save-button");
+
+  let editingId = null;
+  let currentBooks = [];
+
+  function message(element, text) {
+    element.textContent = text;
+    element.classList.remove("hidden");
+  }
+
+  function hideMessage(element) {
+    element.classList.add("hidden");
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
+  }
+
+  function validBookURL(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }
+
+  function showAdmin() {
+    loginPanel.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
+  }
+
+  function showLogin() {
+    adminPanel.classList.add("hidden");
+    loginPanel.classList.remove("hidden");
+  }
+
+  if (!client) {
+    message(loginMessage, "تعذر الاتصال بإعدادات Supabase.");
+    return;
+  }
+
+  async function checkAdmin() {
+    const { data, error } = await client.auth.getSession();
+
+    if (error || !data.session) {
+      showLogin();
+      return;
+    }
+
+    if (data.session.user.id !== ADMIN_UID) {
+      await client.auth.signOut();
+      showLogin();
+      message(loginMessage, "هذا الحساب غير مصرح له بدخول لوحة الإدارة.");
+      return;
+    }
+
+    showAdmin();
+    await loadBooks();
+  }
+
+  document.getElementById("login-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    hideMessage(loginMessage);
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      message(loginMessage, "تعذر تسجيل الدخول. راجع البريد الإلكتروني وكلمة المرور.");
+      return;
+    }
+
+    if (data.user.id !== ADMIN_UID) {
+      await client.auth.signOut();
+      message(loginMessage, "هذا الحساب ليس حساب المدير المصرح له.");
+      return;
+    }
+
+    showAdmin();
+    await loadBooks();
+  });
+
+  async function loadBooks() {
+    booksList.textContent = "جاري تحميل الكتب...";
+
+    const { data, error } = await client
+      .from("books")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      booksList.textContent = "تعذر تحميل الكتب: " + error.message;
+      return;
+    }
+
+    currentBooks = data || [];
+    renderBooks();
+  }
+
+  function renderBooks() {
+    if (!currentBooks.length) {
+      booksList.textContent = "لا توجد كتب مضافة حتى الآن.";
+      return;
+    }
+
+    booksList.innerHTML = currentBooks.map(function (book) {
+      return `
+        <div class="book">
+          <h3>${escapeHTML(book.title)}</h3>
+          <p>${escapeHTML(book.subject)} — الصف ${escapeHTML(book.grade)}</p>
+          <p class="small">${escapeHTML(book.stage)} | ${escapeHTML(book.term)}</p>
+
+          <div class="book-actions">
+            <button type="button" data-edit="${escapeHTML(book.id)}">
+              تعديل
+            </button>
+            <button type="button" class="danger" data-delete="${escapeHTML(book.id)}">
+              حذف
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  booksList.addEventListener("click", async function (event) {
+    const editId = event.target.dataset.edit;
+    const deleteId = event.target.dataset.delete;
+
+    if (editId) {
+      startEdit(editId);
+    }
+
+    if (deleteId) {
+      await deleteBook(deleteId);
+    }
+  });
+
+  function startEdit(id) {
+    const book = currentBooks.find(item => item.id === id);
+    if (!book) return;
+
+    editingId = id;
+
+    document.getElementById("title").value = book.title || "";
+    document.getElementById("stage").value = book.stage || "primary";
+    document.getElementById("grade").value = book.grade || "";
+    document.getElementById("option").value = book.option || "";
+    document.getElementById("subject").value = book.subject || "";
+    document.getElementById("term").value = book.term || "term1";
+    document.getElementById("academic-year").value = book.academic_year || "";
+    document.getElementById("file-size").value = book.file_size || "";
+    document.getElementById("description").value = book.description || "";
+    document.getElementById("book-url").value = book.book_url || "";
+
+    document.getElementById("form-title").textContent = "تعديل الكتاب";
+    saveButton.textContent = "حفظ التعديلات";
+    document.getElementById("cancel-edit").classList.remove("hidden");
+
+    hideMessage(formMessage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetForm() {
+    editingId = null;
+    bookForm.reset();
+
+    document.getElementById("form-title").textContent = "إضافة كتاب جديد";
+    saveButton.textContent = "حفظ الكتاب";
+    document.getElementById("cancel-edit").classList.add("hidden");
+  }
+
+  document.getElementById("cancel-edit").addEventListener("click", function () {
+    resetForm();
+    hideMessage(formMessage);
+  });
+
+  bookForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    hideMessage(formMessage);
+
+    const bookURL = document.getElementById("book-url").value.trim();
+
+    if (!validBookURL(bookURL)) {
+      message(formMessage, "اكتب رابطًا صحيحًا يبدأ بـ https:// أو http://");
+      return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.textContent = "جاري الحفظ...";
+
+    try {
+      const oldBook = editingId
+        ? currentBooks.find(item => item.id === editingId)
+        : null;
+
+      let coverPath = oldBook?.cover_path || null;
+
+      const coverFile = document.getElementById("cover").files[0];
+
+      if (coverFile) {
+        if (!["image/jpeg", "image/png", "image/webp"].includes(coverFile.type)) {
+          throw new Error("نوع صورة الغلاف غير مدعوم.");
+        }
+
+        if (coverFile.size > 5 * 1024 * 1024) {
+          throw new Error("حجم صورة الغلاف يجب ألا يتجاوز 5 ميجابايت.");
+        }
+
+        const extension = coverFile.type === "image/png"
+          ? "png"
+          : coverFile.type === "image/webp"
+            ? "webp"
+            : "jpg";
+
+        const newPath = crypto.randomUUID() + "." + extension;
+
+        const { error: uploadError } = await client.storage
+          .from("book-covers")
+          .upload(newPath, coverFile, {
+            contentType: coverFile.type,
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        coverPath = newPath;
+      }
+
+      const bookData = {
+        title: document.getElementById("title").value.trim(),
+        stage: document.getElementById("stage").value,
+        grade: document.getElementById("grade").value.trim(),
+        option: document.getElementById("option").value.trim(),
+        subject: document.getElementById("subject").value.trim(),
+        term: document.getElementById("term").value,
+        academic_year: document.getElementById("academic-year").value.trim(),
+        file_size: document.getElementById("file-size").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        cover_path: coverPath,
+        book_url: bookURL,
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+
+      if (editingId) {
+        result = await client
+          .from("books")
+          .update(bookData)
+          .eq("id", editingId);
+      } else {
+        result = await client
+          .from("books")
+          .insert(bookData);
+      }
+
+      if (result.error) throw result.error;
+
+      message(formMessage, editingId
+        ? "تم تحديث الكتاب بنجاح."
+        : "تمت إضافة الكتاب بنجاح.");
+
+      resetForm();
+      await loadBooks();
+
+    } catch (error) {
+      message(formMessage, "تعذر حفظ الكتاب: " + error.message);
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = editingId
+        ? "حفظ التعديلات"
+        : "حفظ الكتاب";
+    }
+  });
+
+  async function deleteBook(id) {
+    const book = currentBooks.find(item => item.id === id);
+    if (!book) return;
+
+    if (!confirm("هل أنت متأكد من حذف هذا الكتاب؟")) return;
+
+    const { error } = await client
+      .from("books")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("تعذر حذف الكتاب: " + error.message);
+      return;
+    }
+
+    if (book.cover_path) {
+      const { error: storageError } = await client.storage
+        .from("book-covers")
+        .remove([book.cover_path]);
+
+      if (storageError) {
+        console.error("تعذر حذف صورة الغلاف:", storageError.message);
+      }
+    }
+
+    await loadBooks();
+    alert("تم حذف الكتاب بنجاح.");
+  }
+
+  document.getElementById("logout-button").addEventListener("click", async function () {
+    await client.auth.signOut();
+    resetForm();
+    showLogin();
+  });
+
+  await checkAdmin();
+
+});
+</script>
+
+</body>
+            </html>
