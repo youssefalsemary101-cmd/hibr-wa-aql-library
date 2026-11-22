@@ -4,15 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#176B3D">
+  <meta name="theme-color" content="#248B52">
   <title>حبر وعقل | المكتبة التعليمية</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
   <header>
     <div class="container header-content">
+
       <a href="index.html" class="logo">حبر وعقل</a>
+
+      <button
+        type="button"
+        id="theme-toggle"
+        class="theme-toggle"
+      >
+        🌙 الوضع الداكن
+      </button>
+
     </div>
   </header>
 
@@ -22,6 +32,7 @@
     <section id="home" class="container main-section">
 
       <div class="home-content">
+
         <h1 class="section-title">
           أهلاً بك في <span>حبر وعقل</span>
         </h1>
@@ -31,31 +42,47 @@
           اختر مرحلتك وصفك ومادتك للوصول إلى الكتاب الذي تبحث عنه.
         </p>
 
-        <a href="#library" id="browse-books" class="primary-button">
+        <a
+          href="#library"
+          id="browse-books"
+          class="primary-button"
+        >
           تصفح الكتب
         </a>
+
       </div>
 
     </section>
 
     <!-- المكتبة التعليمية -->
-    <section class="main-section container" id="library" hidden>
+    <section
+      class="main-section container"
+      id="library"
+      hidden
+    >
 
       <div id="wizard">
 
         <div class="wizard-progress">
+
           <p id="step-counter">الخطوة 1</p>
 
           <div class="progress-track">
             <div id="progress-fill"></div>
           </div>
+
         </div>
 
         <div id="wizard-content">
-          <h1 class="section-title">اختر المرحلة الدراسية</h1>
+
+          <h1 class="section-title">
+            اختر المرحلة الدراسية
+          </h1>
+
           <p class="section-description">
             حدد المرحلة التعليمية للبدء.
           </p>
+
         </div>
 
         <div class="wizard-controls">
@@ -85,7 +112,9 @@
       <!-- البحث -->
       <div id="book-search-area" hidden>
 
-        <h2 class="section-title">ابحث عن كتاب</h2>
+        <h2 class="section-title">
+          ابحث عن كتاب
+        </h2>
 
         <input
           type="search"
@@ -93,7 +122,10 @@
           placeholder="ابحث باسم الكتاب أو المادة..."
         >
 
-        <div id="search-results" class="books-grid"></div>
+        <div
+          id="search-results"
+          class="books-grid"
+        ></div>
 
       </div>
 
@@ -107,19 +139,27 @@
     © حبر وعقل - جميع الحقوق محفوظة
   </footer>
 
+  <!-- ملفات الموقع -->
   <script src="curriculum.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script src="supabase-client.js?v=1"></script>
+
   <script src="books.js"></script>
+
   <script src="script.js?v=4"></script>
 
+  <!-- إظهار المكتبة عند الضغط على تصفح الكتب -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+
       const browseButton = document.getElementById("browse-books");
       const home = document.getElementById("home");
       const library = document.getElementById("library");
 
       browseButton.addEventListener("click", function (event) {
+
         event.preventDefault();
 
         home.hidden = true;
@@ -129,7 +169,9 @@
           top: 0,
           behavior: "smooth"
         });
+
       });
+
     });
   </script>
 
